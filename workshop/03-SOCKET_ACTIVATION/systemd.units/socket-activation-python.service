@@ -1,0 +1,9 @@
+[Unit]
+Description=Testing python socket server
+After=socket-activation-python.socket
+Requires=socket-activation-python.socket
+
+
+[Service]
+WorkingDirectory=/opt/workshop
+ExecStart=/usr/bin/python3 /opt/workshop/socket-activation/socket-server

@@ -1,0 +1,9 @@
+[Unit]
+Description=My first systemd service
+
+[Service]
+ExecStart=/usr/bin/python /opt/bin/service-whoami.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

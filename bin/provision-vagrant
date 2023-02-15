@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+
+import pathlib
+import subprocess
+
+SYSTEMD_CONF = pathlib.Path("/etc/systemd/system")
+WORKSHOP = pathlib.Path("/opt/workshop")
+WORKSHOP_ENVS = WORKSHOP / ".workshop-env.conf"
+
+SYSTEMD_ENVS = pathlib.Path("/etc/systemd/system.conf.d/workshop-env.conf")
+
+for unit in WORKSHOP.glob("**/systemd.units/*"):
+    dst = SYSTEMD_CONF / unit.name
+    if dst.exists():
+        continue
+    print(f"{dst} -> {unit}")
+    dst.symlink_to(unit)
+
+org = SYSTEMD_ENVS.read_bytes() if SYSTEMD_ENVS.exists() else ""
+dst = WORKSHOP_ENVS.read_bytes()
+if org != dst:
+    SYSTEMD_ENVS.write_bytes(dst)
+    subprocess.run(["systemctl", "daemon-reload"], check=True)
+

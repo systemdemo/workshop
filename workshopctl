@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+
+
+import sys
+import os
+from pathlib import Path
+import venv
+import subprocess
+import contextlib
+from tempfile import TemporaryDirectory
+from contextlib import ExitStack
+from datetime import datetime
+import base64
+
+
+THIS_DIR = Path(__file__).absolute().resolve().parent
+VENV = THIS_DIR / "venv"
+PYTHON = VENV / "bin/python3"
+
+def reexec(python=PYTHON):
+    os.execv(python, (python, *sys.argv))
+
+if not VENV.exists():
+  venv.create(
+    VENV, 
+    system_site_packages=False, 
+    clear=True, 
+    symlinks=False, 
+    with_pip=True, 
+    prompt=None, 
+    # upgrade_deps=False
+  )
+
+if not Path(sys.executable).samefile(PYTHON):
+  # re exec but in the venv
+  reexec()
+
+try:
+    import click
+except ImportError:
+    subprocess.run([sys.executable, "-m", "pip", "install", "click"], check=True)
+    reexec()
+
+
+
+BOX_DIR = Path(__file__).resolve().absolute().parent / "boxes"
+BIN_DIR = Path(__file__).resolve().absolute().parent / "bin"
+WORKSHOP_DIR = Path(__file__).resolve().absolute().parent / "workshop"
+
+class Vagrant:
+    def __init__(self, base, base_box):
+        self.base = Path(base)
+        self.vagrant_file = f"""
+
+Vagrant.configure("2") do |config|
+
+  config.vm.box = "{base_box}"
+
+  config.vm.box_check_update = false
+
+  config.vm.provider "virtualbox" do |vb|
+     vb.memory = "1024"
+  end
+end
+
+"""
+
+    def _vagrant_call(self, cmd, *args, **kwargs):
+        subprocess.check_call(['vagrant', cmd, *args], cwd=self.base, **kwargs)
+
+    def ssh(self, *args):
+        self._vagrant_call('ssh', *args)
+    
+    def shell(self):
+        self._vagrant_call('ssh')
+    
+    
+    def run(self, script):
+        self._vagrant_call('ssh', "--", "sudo", "bash", "-c", script)
+
+    def halt(self):
+        self._vagrant_call('halt')
+    
+    def up(self):
+        self._vagrant_call('up')
+
+    def destroy(self):
+        self._vagrant_call('destroy', '--force')
+
+    def package(self, pkg):
+        self._vagrant_call('package', '--output', pkg)
+
+    def __enter__(self):
+        (self.base / 'Vagrantfile').write_text(self.vagrant_file)
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.destroy()
+
+
+@click.group()
+def main():
+    ...
+
+@main.command()
+@click.option("--build-dir", default=None, help='where to build the box')
+@click.option("--keep-vm/--destroy-vm", default=False, help='if you want to destroy the vm after building', show_default=True)
+@click.option("--build-stage", "-m", type=click.Choice(["0", "1", "n", "i", 'l']), default="n")
+@click.option("--provision-script", type=Path, default=BIN_DIR / "provision-build")
+@click.option("--pre-provision-shell", is_flag=True, default=False)
+@click.option("--post-provision-shell", is_flag=True, default=False)
+def build(build_dir, keep_vm, build_stage, provision_script, pre_provision_shell, post_provision_shell):
+    if build_stage == "0":
+        base_box = "fedora/37-cloud-base"
+        dest_box = BOX_DIR / "fedora/37-base.box"
+        if dest_box.exists():
+            raise FileExistsError("{dest_box} exists, please delete it or start from 1")
+        alias_box = None
+    elif build_stage == "1":
+        base_box = BOX_DIR / "fedora/37-base.box"
+        dest_box = BOX_DIR / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+        alias_box = BOX_DIR / "fedora/37-last.box"
+    elif build_stage in ("n", 'l'):
+        base_box = (BOX_DIR / "fedora/37-last.box").resolve()
+        dest_box = BOX_DIR / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+        alias_box = BOX_DIR / "fedora/37-last.box"
+    elif build_stage in 'l':
+        base_box = (BOX_DIR / "fedora/37-last.box").resolve()
+        dest_box = None
+        alias_box = None
+    elif build_stage == "i":
+        base_box = "aleivag/fedora37"
+        dest_box = BOX_DIR / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+        alias_box = BOX_DIR / "fedora/37-last.box"
+    elif build_stage == "c":
+        raise NotImplementedError("not implemented yet")
+    
+
+    with ExitStack() as estack:
+        if not build_dir:
+            build_dir = estack.enter_context(TemporaryDirectory())
+        
+        if not keep_vm:
+            box = estack.enter_context(Vagrant(build_dir, base_box))
+        else:
+            box = Vagrant(build_dir, base_box).__enter__()
+
+        box.up()
+
+        if pre_provision_shell:
+            with contextlib.suppress():
+                box.shell()
+        
+        if provision_script:
+            try:
+                print(f"executing {provision_script=}")
+                box.run(Path(provision_script).read_text())
+            except:
+                with contextlib.suppress():
+                    box.shell()
+        
+        if post_provision_shell:
+            with contextlib.suppress():
+                box.shell()
+        if dest_box:
+            box.package(dest_box.absolute())
+        if alias_box:
+            if alias_box.exists():
+                alias_box.unlink()
+            alias_box.symlink_to(dest_box.absolute())
+
+
+
+if __name__ == "__main__":
+    main()

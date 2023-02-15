@@ -1,0 +1,10 @@
+[Unit]
+Description=socket for myapp
+
+[Socket]
+ListenStream=127.0.0.1:8000
+# ReusePort=yes
+
+[Install]
+WantedBy=multi-user.target
+
