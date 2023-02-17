@@ -19,7 +19,7 @@ Restart=always
 WantedBy=multi-user.target
 ```
 
-This unit file assumes that you have a Python script located at `/opt/bin/service-whoami.py` (we already put it there for you). The `ExecStart` directive specifies the command to run when starting the service. The Restart directive specifies that the service should be automatically restarted if it crashes or exits for any reason. The WantedBy directive specifies that the service should be started as part of the multi-user.target, which is one of the default system states that systemd can bring the system into.
+This unit file assumes that you have a Python script located at `/opt/bin/service-whoami.py` (we already put it there for you). The `ExecStart` directive specifies the command to run when starting the service. The Restart directive specifies that the service should be automatically restarted if it crashes or exits for any reason. The `WantedBy` directive specifies that the service should be started as part of the multi-user.target, which is one of the default system states that systemd can bring the system into.
 
 
 You can compare your unit to the one in /etc/systemd/system/myfirstservice-model.service to make sure you did not make a typo.
@@ -252,7 +252,7 @@ Beside units `systemctl status` can accept a **PID** number (this does not need 
 
 Will show the status of the service that’s running the process 9178.
 
-> Exercise: find a pid in your sistem, and see what service is running it.
+> Exercise: find a pid in your system, and see what service is running it.
 
 > Exercise: If every process (with a PID) on your machine is running under a systemd unit, whats the unit for PID 1? 
 
