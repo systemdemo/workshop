@@ -1,0 +1,4 @@
+[Service]
+Type=oneshot
+StandardOutput=journal
+ExecStart=echo "Hello workshop from service unit!"
