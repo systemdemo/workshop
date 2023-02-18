@@ -72,3 +72,7 @@ You can click each panel to make it focus, and you can scroll up and down using 
 Virtual machines on laptops are useful for development, testing, or any other ephemeral and isolated purposes you need. when you are done, you can just discard them. 
 
 To shut down the virtual machine, run the `vagrant halt` command, and to delete it entirely, use the `vagrant destroy` command.
+
+
+---
+[back to TOC](https://github.com/systemdemo/workshop/blob/main/workshop/README.md)
