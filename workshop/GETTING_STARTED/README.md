@@ -27,12 +27,48 @@ Then clone this repository to your local machine using the following command:
 git clone https://github.com/systemdemo/workshop.git
 ```
 
-and start your machine with
+cd into the workshop repo directory and start your machine with `vagrant up` 
 
 ```bash
+[~/ ] cd workshop
 [~/workshop ] vagrant up
 ```
 
 This will take care of downloading a base image and starting a virtual box machine with it, feel free take a sneak peak at the [Vagrantfile](https://github.com/systemdemo/workshop/blob/main/Vagrantfile) to understand what exactly you are doing.
 
+# Once the machine is up, what to do?.
 
+## Access the virtual machine.
+
+Once the virtual machine is up and running, you can use the vagrant ssh command to connect to it and interact with it.
+
+```bash
+[~/workshop ] vagrant ssh
+```
+
+This will open a new terminal window with a shell prompt inside the virtual machine.
+
+We have arranged that you log in as root, there is another user on the system that we will use sometimes in the demo (vagrant).
+
+
+That's it! You have successfully executed your first Vagrant and launched a virtual machine. 
+
+## using tmux.
+
+Sometimes will be useful to have a split panel, and for that intent we will use tmux, a quick intro to tmux is:
+
+To start Tmux, on the terminal window type the following command:
+
+```
+[~/] tmux
+```
+
+This will change the look of the terminal, you can split the screen with `CTL-b`  (that's ctrl and the letter b at the same time) and `%` (the percentage symbol, usually that's shift+5) for vertical and “ (quotes) horizontal.
+
+You can click each panel to make it focus, and you can scroll up and down using your wheel on the mouse.
+
+## shutdown and recreating the virtual machine
+
+Virtual machines on laptops are useful for development, testing, or any other ephemeral and isolated purposes you need. when you are done, you can just discard them. 
+
+To shut down the virtual machine, run the `vagrant halt` command, and to delete it entirely, use the `vagrant destroy` command.

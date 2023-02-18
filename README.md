@@ -33,7 +33,7 @@ git clone https://github.com/systemdemo/workshop.git
 
 ## Start the workshop 
 
-Start the workshop by navegating to the first part. (read )
+Start the workshop by navegating to the first part. (start with [Index](workshop/README.md))
 
 ## repo structure
 
