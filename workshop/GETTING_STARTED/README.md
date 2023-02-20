@@ -73,6 +73,25 @@ Virtual machines on laptops are useful for development, testing, or any other ep
 
 To shut down the virtual machine, run the `vagrant halt` command, and to delete it entirely, use the `vagrant destroy` command.
 
+## configuring your env
+
+If you want to configure your env, like setting the editor (we are going to be editing files, unles you are fine with nano, you might want to change your editor), create a file in conf/bashrc.local.conf and then reprovision (or destroy and recreate) the virtual machine, example
+
+
+
+```bash
+# .bash_profile
+# conf/bashrc.local.conf
+
+export EDITOR=$(which vim)
+
+# User specific environment and startup programs
+```
+
+
+```
+[~/workshop ] vagrant provision
+```
 
 ---
 [back to TOC](https://github.com/systemdemo/workshop/blob/main/workshop/README.md)

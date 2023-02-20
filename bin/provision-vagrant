@@ -5,9 +5,19 @@ import subprocess
 
 SYSTEMD_CONF = pathlib.Path("/etc/systemd/system")
 WORKSHOP = pathlib.Path("/opt/workshop")
-WORKSHOP_ENVS = WORKSHOP / ".workshop-env.conf"
+CONF = pathlib.Path("/opt/conf")
+SYSTEMD_CONF_PATH = pathlib.Path("/etc/systemd/system.conf.d")
 
-SYSTEMD_ENVS = pathlib.Path("/etc/systemd/system.conf.d/workshop-env.conf")
+SYSTEMD_ENVS_SRC = [
+    WORKSHOP_ENVS := CONF / "workshop-env.conf",
+    WORKSHOP_LOCAL_ENVS := CONF / "workshop-env.local.conf",
+]
+
+BASHRC_LOCAL = CONF / "bashrc.local.conf"
+
+if BASHRC_LOCAL.exists():
+    # link local rc to set the editor
+    pathlib.Path("/root/.bashrc.local").write_text(BASHRC_LOCAL.read_text())
 
 for unit in WORKSHOP.glob("**/systemd.units/*"):
     dst = SYSTEMD_CONF / unit.name
@@ -16,9 +26,15 @@ for unit in WORKSHOP.glob("**/systemd.units/*"):
     print(f"{dst} -> {unit}")
     dst.symlink_to(unit)
 
-org = SYSTEMD_ENVS.read_bytes() if SYSTEMD_ENVS.exists() else ""
-dst = WORKSHOP_ENVS.read_bytes()
-if org != dst:
-    SYSTEMD_ENVS.write_bytes(dst)
-    subprocess.run(["systemctl", "daemon-reload"], check=True)
+
+for conf in SYSTEMD_ENVS_SRC:
+    if not conf.exists():
+        continue
+    
+    systemd_conf = SYSTEMD_CONF_PATH / conf.name
+    org = systemd_conf.read_bytes() if systemd_conf.exists() else ""
+    dst = conf.read_bytes()
+    if org != dst:
+        systemd_conf.write_bytes(dst)
+        subprocess.run(["systemctl", "daemon-reload"], check=True)
 

@@ -7,3 +7,4 @@
 4. [systemd for developers]()
 5. [into the journal](JOURNAL_101/README.md)
 6. [Deep dive into services](SERVICES/README.md)
+   1. Workshop: [systemd-analize nginx.](SERVICES/systemd-analize-nginx.md)

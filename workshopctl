@@ -55,12 +55,13 @@ class Vagrant:
 Vagrant.configure("2") do |config|
 
   config.vm.box = "{base_box}"
-
   config.vm.box_check_update = false
 
   config.vm.provider "virtualbox" do |vb|
      vb.memory = "1024"
   end
+
+  
 end
 
 """
@@ -76,7 +77,11 @@ end
     
     
     def run(self, script):
-        self._vagrant_call('ssh', "--", "sudo", "bash", "-c", script)
+        import base64
+        s = base64.encodebytes(script.encode()).decode().replace('\n', '').rstrip()
+        cmd = f"echo {s} | base64 --decode - | sudo bash"
+
+        self._vagrant_call('ssh', "--", cmd)
 
     def halt(self):
         self._vagrant_call('halt')

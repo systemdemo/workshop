@@ -17,6 +17,9 @@ sudo dnf install -y \
         vim\
         tmux\
         links\
+        nginx\
+        strace\
+        lsof\
         python3-{devel,Cython,wheel,ipython}
 
 sudo systemctl enable vboxadd.service vboxadd-service.service
@@ -36,10 +39,6 @@ sudo python3 -m pip install dist/*.whl --force-reinstall
 
 mkdir -p /etc/systemd/system.conf.d
 
-cat <<EOF > /etc/systemd/system.conf.d/workshop-env.conf
-
-EOF
-
 cat <<EOF > /home/vagrant/.bash_profile
 # .bash_profile
 # this file was created for the workflow to move directly to root
@@ -54,6 +53,20 @@ test -e /opt/workshop/ && cd /opt/workshop/
 
 # lets move to root
 exec sudo su -
+
+EOF
+
+cat <<EOF > /root/.bash_profile
+# .bash_profile
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
+
+if [ -f ~/.bashrc.local ]; then
+    . ~/.bashrc.local
+fi
 
 EOF
 

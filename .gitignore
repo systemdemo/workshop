@@ -86,3 +86,4 @@ ENV/
 .vagrant
 boxes
 vm
+conf/*.local*
