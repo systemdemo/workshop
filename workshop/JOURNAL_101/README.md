@@ -75,3 +75,6 @@ journalctl --dmesg
 `journalctl --since -30min`
 `journalctl -u journal_hello.service --since -30min`
 `journalctl -u journal_hello.service --since -30min _PID=1`
+
+---
+[back to TOC](https://github.com/systemdemo/workshop/blob/main/workshop/README.md)
