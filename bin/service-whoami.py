@@ -50,9 +50,9 @@ print(
 )
 
 
-print("")
-print("sleeping forever....")
-
-# while True:
 sys.stdout.flush()
-os.execv(which("sleep"), ("sleep", "infinity"))
+
+if "NO_SLEEP" not in os.environ:
+    print("")
+    print("sleeping forever....")
+    os.execv(which("sleep"), ("sleep", "infinity"))
