@@ -7,4 +7,6 @@
 4. [systemd for Developers]()
 5. [Journal 101](JOURNAL_101/README.md)
 6. [Deep Dive Into Services](SERVICES/README.md)
-   1. Workshop: [systemd-analyze nginx](SERVICES/systemd-analyze-nginx.md)
+   1. [systemd-analyze security nginx](SERVICES/systemd-analyze-nginx.md)
+   2. [Dependencies and More](SERVICES/dependencies.md)
+   3. [systemd-analyze verify](SERVICES/systemd-analyze-verify.md)
