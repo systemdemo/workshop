@@ -3,7 +3,7 @@
 
 ## Log Config
 
-Like most systemd daemons, systemd-journald has a set of properties are are specific to the daemon itself, as well as properties that can be found in unit configurations. The daemon specific properties are set in `/etc/systemd/journald.conf` and its corresponding override files. You can learn more about them in the man 5 page `journald.conf`.
+Like most systemd daemons, systemd-journald has a set of properties are are specific to the daemon itself, as well as properties that can be found in unit configurations. The daemon specific properties are set in `/etc/systemd/journald.conf` and its corresponding override files. You can learn more about them in the [journald.conf](https://www.freedesktop.org/software/systemd/man/journald.conf.html) man page.
 
 Let's look at some commonly used properties, along with their defaults, that are specific to the systemd-journald daemon:
 
@@ -59,7 +59,7 @@ By default, the "max use" properties default to 10%, and the "keep free" propert
 
 `MaxLevelStore=`, `MaxLevelSyslog=`, `MaxLevelKMsg=`, `MaxLevelConsole=`, and `MaxLevelWall=` control the max level of log messsages that are stored or forwarded. The rest are filtered out. Takes a syslog level as a string ("emerg", "alert", "crit", "err", "warning", "notice", "info", "debug") or integer (0-7).
 
-At the service level you can also explore properties from man 5 page `systemd.exec`. Here's an example:
+At the service level you can explore more log properties from the [systemd.exec](https://www.freedesktop.org/software/systemd/man/systemd.exec.html) man page. Here are some of them:
 
 ```ini
 [Service]
