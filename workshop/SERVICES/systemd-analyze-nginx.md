@@ -168,7 +168,7 @@ You can run `systemd-analyze security nginx` and check that the exposure score i
 You can also see that some implicit settings have been turned on (or off depending on the point of view), things like `CapabilityBoundingSet=~CAP_SYS_MODULE` are now set.
 
 
-## Now for the Fun Ones:
+## Now for the Fun Ones
 
 Nginx starts as root and then sets the UID to the user nginx. It does this because it needs to listen to port 80 that's protected... Let's use socket activation to let systemd listen to port 80, and configure nginx to just use the port given to it.
 
