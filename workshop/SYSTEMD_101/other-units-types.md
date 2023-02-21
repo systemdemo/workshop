@@ -185,3 +185,166 @@ Unit run-r85fe61d719b34fe5a6938681d01c2ff8.service could not be found.
 Unit run-r85fe61d719b34fe5a6938681d01c2ff8.timer could not be found.
 
 ```
+
+You can check [systemd-run](https://www.freedesktop.org/software/systemd/man/systemd-run.html#--on-active=) man page for other options.
+
+### Randomize delay
+
+A common error is to set all your timers at the same time (e.g. run some workload at beginning of that). Setting all timers to trigger at the same time can cause a sudden spike in system activity, which can lead to system overload and performance issues. This can be especially problematic in systems with a large number of timers.
+
+To avoid this issue, systemd provides randomized options, [`RandomizedDelaySec`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#RandomizedDelaySec=) and [`FixedRandomDelay`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#FixedRandomDelay=) work to splay the execution of your timer in a window of time. try:
+
+
+```ini 
+[Unit]
+Description=My first timer
+
+[Timer]
+OnCalendar=*-*-* *:*:00/30
+RandomizedDelaySec=10s
+
+[Install]
+WantedBy=timers.target
+```
+
+> Question: What does it do?.
+
+### Extra options we wont cover: 
+
+Take a look at [`WakeSystem`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#WakeSystem=) and [`OnClockChange=, OnTimezoneChange=`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#OnClockChange=) as they are edge cases, but useful never the less.
+
+
+## Path
+
+systemd can monitor a path, and “activate” a service unit when changes to that path path  happen. This can be useful to trigger a reload (or a restart) on a configuration for the service.
+
+
+For instance lets automatically reload sshd whenever its configuration file changes
+
+Create a file named ssh-config-watcher.path in either by creating directly in `/etc/systemd/system/` directory, or executing systemctl edit.
+
+```bash
+[~] systemctl edit --full --force ssh-config-watcher.path
+```
+```ini
+[Unit]
+Description=Watch for changes to sshd configuration
+
+[Path]
+PathChanged=/etc/ssh/sshd_config
+
+[Install]
+WantedBy=multi-user.target
+```
+
+This unit will watch for changes to the /etc/ssh/sshd_config file.
+
+Create a file named ssh-config-watcher.service in the same directory or also by using systemctl edit.
+
+Add the following contents to the nginx-config-watcher.service file:
+
+```
+[~] systemctl edit --full --force ssh-config-watcher.service
+```
+```ini
+[Unit]
+Description=reload sshd when configuration changes
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl reload sshd.service
+
+[Install]
+WantedBy=multi-user.target
+
+```
+
+
+Now start the ssh-config-watcher.path
+
+```bash
+[~] systemctl enable ssh-config-watcher.path
+[~] systemctl start ssh-config-watcher.path
+```
+This will start the unit and ensure it starts automatically at boot time.
+
+After completing the above steps, whenever the configuration file is modified, the sshd.service unit will be reloaded automatically.
+
+Check status of sshd
+
+```bash
+[~] systemctl status sshd.service
+```
+```yaml
+● sshd.service - OpenSSH server daemon
+     Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; preset: enabled)
+     Active: active (running) since Tue 2023-02-21 21:31:56 UTC; 20s ago
+       Docs: man:sshd(8)
+             man:sshd_config(5)
+    Process: 11892 ExecReload=/bin/kill -HUP $MAINPID (code=exited, status=0/SUCCESS)
+   Main PID: 11882 (sshd)
+      Tasks: 1 (limit: 1112)
+     Memory: 1.4M
+        CPU: 29ms
+     CGroup: /system.slice/sshd.service
+             └─11882 "sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups"
+
+```
+
+Now lets simulate a change in `/etc/ssh/sshd_config` by uncommenting like 34 and 35 to 
+
+```yaml
+ 33 # Logging
+ 34 SyslogFacility AUTH
+ 35 LogLevel INFO
+ 36 
+```
+
+You could just touch the file to be honest
+
+```bash
+[~] systemctl status sshd.service
+```
+```yaml
+● sshd.service - OpenSSH server daemon
+     Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; preset: enabled)
+     Active: active (running) since Tue 2023-02-21 21:32:29 UTC; 18min ago
+       Docs: man:sshd(8)
+             man:sshd_config(5)
+    Process: 12147 ExecReload=/bin/kill -HUP $MAINPID (code=exited, status=0/SUCCESS)
+   Main PID: 11903 (sshd)
+      Tasks: 1 (limit: 1112)
+     Memory: 1.3M
+        CPU: 24ms
+     CGroup: /system.slice/sshd.service
+             └─11903 "sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups"
+```
+
+### Creating a ephemeral path
+
+Same as an ephemeral timer, you can create ephemeral or ad-hoc path, we have cover this before, this is just an example
+
+```
+[~]# systemd-run --path-property PathExists=/tmp/ping touch /tmp/pong
+Running path as unit: run-r1ad4c2faedb9498085f0090b6011ac50.path
+Will run service as unit: run-r1ad4c2faedb9498085f0090b6011ac50.service
+```
+Will touch /tmp/pong when /tmp/ping is created, you can put any path property under [--path-property](https://www.freedesktop.org/software/systemd/man/systemd.path.html). Lets check that files dont exist
+
+
+```
+[~] ls /tmp/pong
+ls: cannot access '/tmp/pong': No such file or directory
+[~] ls /tmp/ping
+ls: cannot access '/tmp/ping': No such file or directory
+[~] ls /tmp/pong
+ls: cannot access '/tmp/pong': No such file or directory
+```
+
+now lets create ping, and see pong been created.
+```
+[~] touch /tmp/ping
+[~] ls /tmp/pong
+/tmp/pong
+```
