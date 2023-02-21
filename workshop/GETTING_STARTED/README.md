@@ -1,8 +1,8 @@
 # Getting Started
 
-## Initial steps
+## Initial Steps
 
-To get started with the workshop, you will need a Linux operating system that uses systemd as its default init system. You can use any Linux distribution that uses systemd, such as Ubuntu, Debian, Fedora, CentOS, or Arch Linux. We provide (and recommend using) a Vagrant + Virtual Box setup, that will “allow” you to run this workshop in not only linux, but also macos and windows.
+To get started with the workshop, you will need a Linux operating system that uses systemd as its default init system. You can use any Linux distribution that uses systemd, such as Ubuntu, Debian, Fedora, CentOS, or Arch Linux. We provide (and recommend using) a Vagrant + Virtual Box setup, that will allow you to run this workshop in not only Linux, but also MacOS and Windows.
 
 
 To install Vagrant with VirtualBox, follow these steps:
@@ -20,27 +20,26 @@ vagrant --version
 
 You should see the version number of Vagrant printed on the screen.
 
-
 Then clone this repository to your local machine using the following command:
 
 ```bash
 git clone https://github.com/systemdemo/workshop.git
 ```
 
-cd into the workshop repo directory and start your machine with `vagrant up`
+`cd` into the workshop repo check out and start your machine with `vagrant up`
 
 ```bash
 [~/ ] cd workshop
 [~/workshop ] vagrant up
 ```
 
-This will take care of downloading a base image and starting a virtual box machine with it, feel free take a sneak peak at the [Vagrantfile](https://github.com/systemdemo/workshop/blob/main/Vagrantfile) to understand what exactly you are doing.
+This will take care of downloading a base image and starting a virtual box machine with it. Feel free take a sneak peak at the [Vagrantfile](https://github.com/systemdemo/workshop/blob/main/Vagrantfile) to understand what it's doing.
 
-# Once the machine is up, what to do?.
+# Once the machine is up, what do I do?.
 
-## Access the virtual machine.
+## Access the Virtual Machine
 
-Once the virtual machine is up and running, you can use the vagrant ssh command to connect to it and interact with it.
+Once the virtual machine is up and running, you can use the `vagrant ssh` command to connect and interact with it.
 
 ```bash
 [~/workshop ] vagrant ssh
@@ -48,36 +47,33 @@ Once the virtual machine is up and running, you can use the vagrant ssh command 
 
 This will open a new terminal window with a shell prompt inside the virtual machine.
 
-We have arranged that you log in as root, there is another user on the system that we will use sometimes in the demo (vagrant).
-
+We have arranged to set up to log in as root. There is a "vagrant" user on the system that we will occasionally use in the demo, but most functions will require you to run as root.
 
 That's it! You have successfully executed your first Vagrant and launched a virtual machine.
 
-## using tmux.
+## Using tmux
 
-Sometimes will be useful to have a split panel, and for that intent we will use tmux, a quick intro to tmux is:
+Sometimes it will be useful to have a split panel. For that intent we will use tmux. Here's a quick intro to tmux:
 
-To start Tmux, on the terminal window type the following command:
+To start tmux, on the terminal window type the following command:
 
 ```
 [~/] tmux
 ```
 
-This will change the look of the terminal, you can split the screen with `CTL-b`  (that's ctrl and the letter b at the same time) and `%` (the percentage symbol, usually that's shift+5) for vertical and “ (quotes) horizontal.
+This will change the look of the terminal. You can split the screen with `CTL-b` (that's the ctrl key and the b key at the same time) and then use `%` (the percentage symbol, usually that's shift+5) for vertical and " (quotes) horizontal.
 
 You can click each panel to make it focus, and you can scroll up and down using your wheel on the mouse.
 
-## shutdown and recreating the virtual machine
+## Shutting Down and Recreating the Virtual Machine
 
-Virtual machines on laptops are useful for development, testing, or any other ephemeral and isolated purposes you need. when you are done, you can just discard them.
+Virtual machines on laptops are useful for development, testing, or any other ephemeral and isolation purposes. When you are done, you can just discard them.
 
-To shut down the virtual machine, run the `vagrant halt` command, and to delete it entirely, use the `vagrant destroy` command.
+To shut down the virtual machine, run the `vagrant halt` command. To delete it entirely, use the `vagrant destroy` command.
 
-## configuring your env
+## Configuring Your Environment
 
-If you want to configure your env, like setting the editor (we are going to be editing files, unles you are fine with nano, you might want to change your editor), create a file in conf/bashrc.local.conf and then reprovision (or destroy and recreate) the virtual machine, example
-
-
+If you want to configure your environment to do things like setting the editor (we are going to be editing files and unless you are fine with nano, you might want to change your editor), create a file in `conf/bashrc.local.conf` in the workshop repo, and then re-provision (or destroy and recreate) the virtual machine. Here is an example of what the contents could look like:
 
 ```bash
 # .bash_profile
@@ -88,6 +84,8 @@ export EDITOR=$(which vim)
 # User specific environment and startup programs
 ```
 
+Save the contents and then run:
+
 
 ```
 [~/workshop ] vagrant provision
@@ -95,7 +93,7 @@ export EDITOR=$(which vim)
 
 ## Environment Prerequisites
 
-Some of the features we will be demo-ing do not work well when SELinux is set to enforcing mode. The virtual machine we will be using already sets SELinux to permissive mode. You can verify this in the virtual machine by running:
+Some of the features we will be demoing do not work well when SELinux is set to enforcing mode. The virtual machine we will be using already sets SELinux to permissive mode. You can verify this in the virtual machine by running:
 
 ```
 [~]# getenforce
