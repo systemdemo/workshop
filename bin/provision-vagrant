@@ -15,9 +15,15 @@ SYSTEMD_ENVS_SRC = [
 
 BASHRC_LOCAL = CONF / "bashrc.local.conf"
 
+SELINUX_CONFIG = CONF / "workshop-selinux-config"
+
 if BASHRC_LOCAL.exists():
     # link local rc to set the editor
     pathlib.Path("/root/.bashrc.local").write_text(BASHRC_LOCAL.read_text())
+
+if SELINUX_CONFIG.exists():
+    pathlib.Path("/etc/selinux/config").write_text(SELINUX_CONFIG.read_text())
+    subprocess.run(["setenforce", "Permissive"], check=True)
 
 for unit in WORKSHOP.glob("**/systemd.units/*"):
     dst = SYSTEMD_CONF / unit.name
@@ -30,7 +36,7 @@ for unit in WORKSHOP.glob("**/systemd.units/*"):
 for conf in SYSTEMD_ENVS_SRC:
     if not conf.exists():
         continue
-    
+
     systemd_conf = SYSTEMD_CONF_PATH / conf.name
     org = systemd_conf.read_bytes() if systemd_conf.exists() else ""
     dst = conf.read_bytes()

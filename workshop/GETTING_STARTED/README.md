@@ -27,7 +27,7 @@ Then clone this repository to your local machine using the following command:
 git clone https://github.com/systemdemo/workshop.git
 ```
 
-cd into the workshop repo directory and start your machine with `vagrant up` 
+cd into the workshop repo directory and start your machine with `vagrant up`
 
 ```bash
 [~/ ] cd workshop
@@ -51,7 +51,7 @@ This will open a new terminal window with a shell prompt inside the virtual mach
 We have arranged that you log in as root, there is another user on the system that we will use sometimes in the demo (vagrant).
 
 
-That's it! You have successfully executed your first Vagrant and launched a virtual machine. 
+That's it! You have successfully executed your first Vagrant and launched a virtual machine.
 
 ## using tmux.
 
@@ -69,7 +69,7 @@ You can click each panel to make it focus, and you can scroll up and down using 
 
 ## shutdown and recreating the virtual machine
 
-Virtual machines on laptops are useful for development, testing, or any other ephemeral and isolated purposes you need. when you are done, you can just discard them. 
+Virtual machines on laptops are useful for development, testing, or any other ephemeral and isolated purposes you need. when you are done, you can just discard them.
 
 To shut down the virtual machine, run the `vagrant halt` command, and to delete it entirely, use the `vagrant destroy` command.
 
@@ -91,6 +91,20 @@ export EDITOR=$(which vim)
 
 ```
 [~/workshop ] vagrant provision
+```
+
+## Environment Prerequisites
+
+Some of the features we will be demo-ing do not work well when SELinux is set to enforcing mode. The virtual machine we will be using already sets SELinux to permissive mode. You can verify this in the virtual machine by running:
+
+```
+[~]# getenforce
+```
+
+If `getenforce` says you are in enforcing mode, you can set it to permissive by running:
+
+```
+[~]# setenforce Permissive
 ```
 
 ---
