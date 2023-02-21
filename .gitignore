@@ -87,3 +87,8 @@ ENV/
 boxes
 vm
 conf/*.local*
+
+# vim temp files
+*~
+*.swp
+*.swo
