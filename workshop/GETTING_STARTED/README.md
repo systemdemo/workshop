@@ -57,7 +57,7 @@ Sometimes it will be useful to have a split panel. For that intent we will use t
 
 To start tmux, on the terminal window type the following command:
 
-```
+```bash
 [~/] tmux
 ```
 
@@ -87,7 +87,7 @@ export EDITOR=$(which vim)
 Save the contents and then run:
 
 
-```
+```bash
 [~/workshop ] vagrant provision
 ```
 
@@ -95,13 +95,13 @@ Save the contents and then run:
 
 Some of the features we will be demoing do not work well when SELinux is set to enforcing mode. The virtual machine we will be using already sets SELinux to permissive mode. You can verify this in the virtual machine by running:
 
-```
+```bash
 [~]# getenforce
 ```
 
 If `getenforce` says you are in enforcing mode, you can set it to permissive by running:
 
-```
+```bash
 [~]# setenforce Permissive
 ```
 
