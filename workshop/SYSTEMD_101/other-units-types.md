@@ -42,7 +42,7 @@ WantedBy=timers.target
 Description=My first systemd service
 
 [Service]
-type=oneshot
+Type=oneshot
 ExecStart=/usr/bin/python /opt/bin/service-whoami.py
 Environment=NO_SLEEP=no
 
