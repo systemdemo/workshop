@@ -92,3 +92,6 @@ conf/*.local*
 *~
 *.swp
 *.swo
+
+# exange items
+conf/spool/

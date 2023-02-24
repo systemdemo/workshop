@@ -20,6 +20,8 @@ sudo dnf install -y \
         nginx\
         strace\
         lsof\
+        xq\
+        wireshark-cli\
         python3-{devel,Cython,wheel,ipython}
 
 sudo systemctl enable vboxadd.service vboxadd-service.service
