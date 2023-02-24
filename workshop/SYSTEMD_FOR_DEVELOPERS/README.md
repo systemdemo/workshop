@@ -263,10 +263,7 @@ Let’s spend some time in this library.
 pystemd has a basic SDObject that you can use to talk to systemd… there are better abstraction in pystemd, but this one is the basic one, lets use it to do exactly the same as before. Fire up an ipython shell
 
 ```bash
-[root@eth50-1 ~] ipython
-Python 3.11.1 (main, Jan  6 2023, 00:00:00) [GCC 12.2.1 20221121 (Red Hat 12.2.1-4)]
-Type 'copyright', 'credits' or 'license' for more information
-IPython 8.5.0 -- An enhanced Interactive Python. Type '?' for help.
+[root@eth50-1 ~] pystemd-shell
 ```
 ```python
 In [1]: import pystemd
@@ -443,3 +440,326 @@ Terminated
 more on this, when we review `pystemd.futures`.
 
 
+## Transient units with pystemd.run
+
+Same as `systemd-run` is a command-line tool provided by the systemd for running transient units. Pystemd comes with pystemd.run, It allows you to easily create and manage short-lived units and services from the command line.
+
+The method pystemd.run is spiritual child of systemd-run and subprocess.run, that its, it takes a more API driven approach that systemd-run, but its not a drop in replacement for subprocess.run (yet!).
+
+you can use it very simple
+
+```bash
+[root@eth50-1 ~]# pystemd-shell
+```
+```python
+In [1]: import pystemd.run
+
+In [2]: pystemd.run(["/usr/bin/sleep", "infinity"])
+Out[2]: <pystemd.systemd1.unit.Unit at 0x7ff26c2207d0>
+
+In [3]: unit = _
+
+In [4]: unit.Service.MainPID
+Out[4]: 20478
+
+In [5]: unit.Service.GetProcesses()
+Out[5]: 
+[(b'/system.slice/pystemdf3db2ea8c208497b8e557148265783a2.service',
+  20478,
+  b'/usr/bin/sleep infinity')]
+
+In [7]: unit.Unit.Id
+Out[7]: b'pystemdf3db2ea8c208497b8e557148265783a2.service'
+
+```
+
+if you take the Id of the unit, then you can see the status, and the generated file with
+
+```yaml
+[~] systemctl status pystemdf3db2ea8c208497b8e557148265783a2.service
+● pystemdf3db2ea8c208497b8e557148265783a2.service - pystemd: pystemdf3db2ea8c208497b8e557148265783a2.service
+     Loaded: loaded (/run/systemd/transient/pystemdf3db2ea8c208497b8e557148265783a2.service; transient)
+  Transient: yes
+     Active: active (running) since Fri 2023-02-24 17:10:54 UTC; 2min 55s ago
+   Main PID: 20478 (sleep)
+      Tasks: 1 (limit: 1112)
+     Memory: 196.0K
+        CPU: 1ms
+     CGroup: /system.slice/pystemdf3db2ea8c208497b8e557148265783a2.service
+             └─20478 /usr/bin/sleep infinity
+
+Feb 24 17:10:54 eth50-1.rsw1ah.30.frc4.tfbnw.net systemd[1]: Started pystemdf3db2ea8c208497b8e557148265783a2.service - pystemd: pystemdf3db2ea8c208497b8e5571>
+
+```
+
+```ini
+[~] systemctl cat  pystemdf3db2ea8c208497b8e557148265783a2.service
+# /run/systemd/transient/pystemdf3db2ea8c208497b8e557148265783a2.service
+# This is a transient unit file, created programmatically via the systemd API. Do not edit.
+[Unit]
+Description=pystemd: pystemdf3db2ea8c208497b8e557148265783a2.service
+
+[Service]
+ExecStart=
+ExecStart="/usr/bin/sleep" "infinity"
+RemainAfterExit=no
+```
+
+Go ahead and stop either with python `unit.Stop(b"replace")` or with `systemctl stop pystemdf3db2ea8c208497b8e557148265783a2.service`
+
+### shells, redirecting stdin/out and extras
+
+same as systemd-run, you can do some pty magic and get the output on your terminal
+
+```python
+In [17]: import sys
+
+In [18]: pystemd.run(
+    ["/usr/bin/env"], 
+    stdout=sys.stdout, 
+    wait=True, 
+    env={"FOO": "bar"}
+)
+```
+```ini
+LANG=en_US.UTF-8
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+WORKSHOP_DIR=/opt/workshop
+INVOCATION_ID=8f7f00f021f84afdb4c9d7a6c4f9f446
+SYSTEMD_EXEC_PID=20544
+FOO=bar
+```
+
+```python
+In [19]: pystemd.run(
+    ["/usr/bin/bash"], 
+    stdin=sys.stdin, 
+    stderr=sys.stderr, 
+    stdout=sys.stdout, 
+    pty=True, 
+    wait=True, 
+    env={"FOO": "bar"}
+)
+```
+```yaml
+[~] systemctl status $$
+● pystemd8ae31f1d98be4a8abdb34e7570990eb8.service - pystemd: pystemd8ae31f1d98be4a8abdb34e7570990eb8.service
+     Loaded: loaded (/run/systemd/transient/pystemd8ae31f1d98be4a8abdb34e7570990eb8.service; transient)
+  Transient: yes
+     Active: active (running) since Fri 2023-02-24 17:24:02 UTC; 10s ago
+   Main PID: 20553 (bash)
+      Tasks: 3 (limit: 1112)
+     Memory: 5.6M
+        CPU: 50ms
+     CGroup: /system.slice/pystemd8ae31f1d98be4a8abdb34e7570990eb8.service
+             ├─20553 /usr/bin/bash
+             ├─20576 systemctl status 20553
+             └─20577 less
+
+Feb 24 17:24:02 eth50-1.rsw1ah.30.frc4.tfbnw.net systemd[1]: Started pystemd8ae31f1d98be4a8abdb34e7570990eb8.service - pystemd: pystemd8ae31f1d98be4a8abdb34e>
+```
+
+```
+unit = pystemd.run("/usr/bin/stress --cpu 1", extra={"CPUQuota": 0.5})
+```
+
+
+You may add almost all properties of a service to a transient service and it should work, for instance the following example will run stress on a unit that can only use 10% of the cpu, (if you want on another terminal, or on your tmux session, you might want to start htop).
+
+
+```python
+In [24]: unit = pystemd.run("/usr/bin/stress --cpu 2", extra={"CPUQuota": 0.1})
+
+In [25]: unit.Stop(b"replace")
+Out[25]: b'/org/freedesktop/systemd1/job/166884'
+
+```
+
+We will see more of `pystemd.run` on the service and sandboxing deepdive, so let's not spend too much time here.
+
+## Futures with pystemd.future
+
+A new addition to pystemd that we are super excited about its `pystemd.futures`, it expands on the ideas of python `concurrent.futures`, but applies a dash of systemd on top of that. 
+
+What if you could take parts of your code (don't exec, just fork), and run them on a different systemd unit, that way, you might have parts of your code that do not have access to network, or that have CPU restriction, or that can’t write to disk, of better yeti, that you can actually kill. there are 3 implementations for this that we can study
+
+
+### pystemd.future.run
+
+The first one is call `pystemd.futures.run`, and its just a convinient wrapper to run a method or function inside another systemd unit.
+
+We have a function written that just waste cpu for a particular timeout, you can view it with
+
+```python
+[~] pystemd-shell
+
+In [1]: ppcode cpu_waste
+
+>>> # /root/.local/bin/pystemd-shell[306:310]
+
+def cpu_waste(timeout):
+    t0= time.time()
+    while time.time() - t0 < timeout:
+        2**64 -1
+    
+    return 2**64 -1
+```
+
+If you execute `cpu_waste(5)`, and monitor htop, you will see the spike to 100% of cpu for 5 seconds.
+
+We can use pystemd.futures.run to execute it in a different systemd context, you can do:
+
+```python
+In [2]: pystemd.futures.run(cpu_waste, {"CPUQuota": 0.1, "User": "nobody"}, 60)
+```
+
+And run the stress test for 60 seconds, then you can go to to htop and get 
+
+```
+22077 nobody      20   0  319M 76068  4844 R  10.9  7.7  0:00.91 /usr/bin/python3 /root/.local/bin/pystemd-shell
+```
+
+The process is now run as `nobody` and the cpu is ~10% … you can also do `systemctl status 22077` (where 22077 is the pid of the process), and that is effectively another unit
+
+
+### pystemd.futures.TransientUnitPoolExecutor
+
+Same as ProcessPoolExecutor, where you can shard and ratelimit work on consumers, you have `pystemd.futures.TransientUnitPoolExecutor`, that can be used as the example in [examples/future_cpucap_pool.py](https://github.com/systemd/pystemd/blob/main/examples/future_cpucap_pool.py). You can view the usage in our shell:
+
+```python
+In [2]: ppcode future_cpucap_pool.main                                                                                                            
+>>> # /opt/pystemd/examples/future_cpucap_pool.py[51:65]                                                                                                      
+
+def main(cpu_quota=0.25):
+    with TransientUnitPoolExecutor(
+        properties={"CPUQuota": cpu_quota, "User": "nobody"},
+        max_workers=10,
+    ) as poold:
+        top = MyTop(poold.unit)
+        top.start()
+
+        poold.submit(run, 5)
+        poold.submit(run, 10)
+        poold.submit(run, 15)
+        poold.submit(run, 20)
+        poold.submit(run, 25)
+        poold.submit(run, 30)
+```
+
+This will start a Pool of workers that will consume work… the work is defined in `run` (feel free to see the code with `ppcode future_cpucap_pool.run`, but it’s exactly the same as cpu_waste) and we execute this job to be executed in the pool. The Pool has a quota and its running as nobody, as added bonus it will print the cpu usage
+
+```python
+In [4]: future_cpucap_pool.main()
+```
+
+
+### pystemd.futures.TransientUnitProcess
+
+There is also another api in python in multiprocessing that use the Process object (a base object for the concurrent.future if i may add), that you can actually swap for pystemd.futures.TransientUnitProcess , there is an example in [examples/future_cpucap_process.py](https://github.com/systemd/pystemd/blob/main/examples/future_cpucap_process.py) that you can follow.
+
+You define a process by subclassing TransientUnitProcess, and adding a run method.
+
+```python
+In [10]: ppcode future_cpucap_process.Process                                                                                                                 
+-------> ppcode(future_cpucap_process.Process)                                                                                                                
+>>> # /opt/pystemd/examples/future_cpucap_process.py[10:22]                                                                                                   
+
+class Process(TransientUnitProcess):
+    def __init__(self, timeout, properties):
+        self.timeout = timeout
+        super().__init__(properties=properties)
+
+    def run(self):
+        """
+        This is suppose to waste a bunch of CPU.
+        """
+        t0 = time.time()
+        while time.time() - t0 < self.timeout:
+            2**64 - 1
+  
+```
+
+Then you might as well just use it
+
+```python
+In [11]: ppcode future_cpucap_process.main                                                                                                                    
+-------> ppcode(future_cpucap_process.main)                                                                                                                   
+>>> # /opt/pystemd/examples/future_cpucap_process.py[24:35]                                                                                                   
+
+def main(cpu_quota=0.2):
+
+    p = Process(timeout=30, properties={"CPUQuota": cpu_quota, "User": "nobody"})
+    p.start()
+    process = psutil.Process(p.pid)
+
+    while p.is_alive():
+        with suppress(NoSuchProcess):  # the process can die mid check
+            cpu_percent = process.cpu_percent(interval=1)
+            sys.stdout.write("\033[2J\033[1;1H")
+            print(f"current {cpu_percent=}")
+  
+
+
+In [12]: future_cpucap_process.main                                                                                                                           
+-------> future_cpucap_process.main()                                                                                                                         
+current cpu_percent=21.8  
+```
+
+This respects the contract you have with Process  where you can just get `TransientUnitProcess.is_alive()` to check if the process is alive. `TransientUnitProcess.wait()` and `TransientUnitProcess.join()` is still supported
+
+# pystemd daemon
+
+Now it's time to have fun using the daemon, for this demo its will be useful if we have divided screens, as it makes it simple to see the changes. The simple way is to start `tmux` then hit `CTL-b` follow by the double quotes (").
+
+on one part of the screen do `watch systemctl status pystemd-name-server.service` and in the other open your `pystemd-shell` and execute `pystemd_shell_service`, like
+
+```
+[~]# pystemd-shell 
+
+In [1]: pystemd_shell_service
+
+```
+
+
+You can see that from the status windows that the process is in the activating state 
+
+```yaml
+● pystemd-name-server.service - pystemd: pystemd-name-server.service
+     Loaded: loaded (/run/systemd/transient/pystemd-name-server.service; transient)
+  Transient: yes
+     Active: activating (start) since Fri 2023-02-24 23:06:01 UTC; 44s ago
+   Main PID: 23783 (python3)
+      Tasks: 3 (limit: 1112)
+     Memory: 49.3M
+        CPU: 601ms
+     CGroup: /system.slice/pystemd-name-server.service
+             └─23783 /usr/bin/python3 /root/.local/bin/pystemd-shell
+```
+
+We have 5 minutes to activate the service, so lets have some fun, lets add some text. from the python console:
+
+
+```
+In [1]: pystemd.daemon.notify(False, status="procastinating")
+Out[1]: 1
+
+```
+
+Now systemctl status shows a new status message
+
+```
+● pystemd-name-server.service - pystemd: pystemd-name-server.service
+     Loaded: loaded (/run/systemd/transient/pystemd-name-server.service; transient)
+  Transient: yes
+     Active: activating (start) since Fri 2023-02-24 23:10:15 UTC; 1min 14s ago
+   Main PID: 23849 (python3)
+     Status: "procastinating"
+      Tasks: 3 (limit: 1112)
+     Memory: 49.9M
+        CPU: 841ms
+     CGroup: /system.slice/pystemd-name-server.service
+             └─23849 /usr/bin/python3 /root/.local/bin/pystemd-shell
+```
+
+
+Now we can set 

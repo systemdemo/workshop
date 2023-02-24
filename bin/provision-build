@@ -22,6 +22,8 @@ sudo dnf install -y \
         lsof\
         xq\
         wireshark-cli\
+        htop\
+        stress\
         python3-{devel,Cython,wheel,ipython}
 
 sudo systemctl enable vboxadd.service vboxadd-service.service
@@ -38,6 +40,7 @@ test -e ${PYSTEMD_SRC}/setup.py || sudo git clone $PYSTEMD_REPO $PYSTEMD_SRC
 cd $PYSTEMD_SRC
 test -e ${PYSTEMD_SRC}/dist/*.whl || sudo python3 setup.py bdist_wheel
 sudo python3 -m pip install dist/*.whl --force-reinstall
+sudo python3 -m pip install climage
 
 mkdir -p /etc/systemd/system.conf.d
 
