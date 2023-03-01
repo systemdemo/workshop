@@ -84,6 +84,8 @@ Check that it appears both inside and outside the namespace:
 [~] ls /usr/lib/systemd/alvaroandanita
 ```
 
+Exit from `nsenter` and stop the service when you are done.
+
 ## Chroot
 
 Chroot (short for "change root") is a Unix command that allows a user to change the root directory of a process or group of processes to a new location in the file system. When a process is run in a chroot environment, it can only access files and directories that are located within the new root directory. However, chroot by itself does not provide an isolated resource (like mount namespaces). Changes you make in a chroot will still show up in the original directory on the host. Let's test chroot out now:
@@ -130,8 +132,7 @@ ExecStart=sleep infinity
 
 ```
 [~] systemctl start chroot
-[~] systemctl show --value -p MainPID chroot.service
-[~] nsenter --target <PID from previous command> --all
+[~] nsenter -t $(systemctl show --value -p MainPID chroot.service) --all
 [~] touch /alvaroandanita
 [~] cat /proc/1/cmdline
 ```
@@ -139,9 +140,76 @@ ExecStart=sleep infinity
 This time you should be able to `cat` /proc/1/cmdline. From outside the chroot you should see /opt/debian/alvaroandanita.
 
 ## Dynamic Users
-    - use `ps` to show that the running user is not root
+
+Sometimes you don't care which user your unit's processes should run as, as long as it is not root. There is the `User=` property available, but the problem is you need the user provided to exist on the system. Systemd provides a novel property called `DynamicUser=` which will create users on-demand when a service is started and destroy then when the service stops. This is in contrast to system users, which are created during installation or configuration and persist even when the associated service is not running. The UID is allocated from a range set by systemd. You can read more about them in the [documentation](https://systemd.io/UIDS-GIDS/).
+
+When the unit stops, all the files and state associated with that user are cleaned up. Systemd does this using mount namespaces, which means using `DynamicUser=` also implicitly enables `ProtectSystem=strict` and `ProtectHome=read-only` (properties we've seen above) along with a bunch of other properties to privatize the state.
+
+We've provided a service unit called `dynamic_user.service`. Let's look at the contents:
+
+```
+[~]# systemctl cat dynamic_user
+# /etc/systemd/system/dynamic_user.service
+[Service]
+DynamicUser=yes
+ExecStart=sleep infinity
+```
+
+Start the service and get the PID:
+
+```
+[~] systemctl start dynamic_user
+[~] systemctl show --value -p MainPID dynamic_user
+```
+
+We can get the user of the running process in this service by using the `ps` command:
+
+```
+[~] ps -p <PID output by the previous command> -o user,uid,pid,command,cgroup
+```
+
+This command shows the name of the user running the PID, the UID, the PID, the command, and the cgroup associated. Notice that the user is not root, but should also not be any user that exists permanently on the system.
+
+Stop the service when you are done.
 
 ## Network Isolation
-	- PrivateNetwork=
-    - isolate all network. use this to seg way into IPAddressDeny/Allow
-    - use `systemd-run bash` to demo sockets filtering. explain why
+
+Isolating processes from the network is also a common feature of containerization solutions. We'll talk about 2 different ways to do this.
+
+The first is `PrivateNetwork=true` which makes use of network namespaces. This sets up a new network namespace for the executed processes and configures only the loopback network device "lo" inside it. For this example we will use `systemd-run` (just to switch it up). Because it uses Linux namespaces, you can still use `nsenter` as in the mount namespace example. But by using `systemd-run` to start a shell and connect a pseudo-terminal, your shell will automatically inherit the namespaces from the first process of the unit so you can run commands from the command line inside the namespaces.
+
+Let's try it:
+
+```
+[~] systemd-run --pty -p PrivateNetwork=true /bin/bash
+```
+
+Once this successfully runs you will be in a shell that has inherited the namespace setup. You can check that only the "lo" interface is available by running `ip address` to show the interfaces and addresses:
+
+```
+[~] ip address
+```
+
+You can check that network is not available by running `ping` from within the namespace:
+
+```
+[~] ping -c 1 8.8.8.8
+```
+
+Exit from the `systemd-run` shell when you are done.
+
+You'll notice that `PrivateNetwork=` is all or nothing. The other way to isolate the network is to use `IPAddressDeny=` and `IPAddressAllow=`. This allows more controlled network isolation by using eBPF to filter at the socket level. It does not use network namespaces (and so `nsenter` will not work to test this).
+
+Let's try the previous commands, but now with 8.8.8.8 denied:
+```
+[~] systemd-run --pty -p IPAddressDeny=8.8.8.8 /bin/bash
+[~] ip address
+[~] ping -c 1 8.8.8.8
+```
+
+You can see that we still have interfaces other than "lo" set up. If you try to ping a different address it should still work:
+```
+[~] ping -c 1 8.8.4.4
+```
+
+Exit from the `systemd-run` shell when you are done.
