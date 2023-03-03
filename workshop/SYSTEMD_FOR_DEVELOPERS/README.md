@@ -661,8 +661,8 @@ You define a process by subclassing TransientUnitProcess, and adding a run metho
 
 ```python
 In [10]: ppcode future_cpucap_process.Process                                                                                                                 
--------> ppcode(future_cpucap_process.Process)                                                                                                                
->>> # /opt/pystemd/examples/future_cpucap_process.py[10:22]                                                                                                   
+-------> ppcode(future_cpucap_process.Process)
+>>> # /opt/pystemd/examples/future_cpucap_process.py[10:22]
 
 class Process(TransientUnitProcess):
     def __init__(self, timeout, properties):
@@ -676,7 +676,6 @@ class Process(TransientUnitProcess):
         t0 = time.time()
         while time.time() - t0 < self.timeout:
             2**64 - 1
-  
 ```
 
 Then you might as well just use it
@@ -711,15 +710,11 @@ This respects the contract you have with Process  where you can just get `Transi
 
 Now it's time to have fun using the daemon, for this demo its will be useful if we have divided screens, as it makes it simple to see the changes. The simple way is to start `tmux` then hit `CTL-b` follow by the double quotes (").
 
-on one part of the screen do `watch systemctl status pystemd-name-server.service` and in the other open your `pystemd-shell` and execute `pystemd_shell_service`, like
+on one part of the screen do `watch systemctl status daemon-demo-service.service` and in the other open your `pystemd-shell` and execute `daemon_demo_service`... If thats a bit hard to follow, this section comes with a quick helper, just execute on your fresh terminal
 
 ```
-[~]# pystemd-shell 
-
-In [1]: pystemd_shell_service
-
+[~] daemon-demo
 ```
-
 
 You can see that from the status windows that the process is in the activating state 
 
@@ -748,6 +743,7 @@ Out[1]: 1
 Now systemctl status shows a new status message
 
 ```
+
 ● pystemd-name-server.service - pystemd: pystemd-name-server.service
      Loaded: loaded (/run/systemd/transient/pystemd-name-server.service; transient)
   Transient: yes

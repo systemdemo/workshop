@@ -24,6 +24,7 @@ sudo dnf install -y \
         wireshark-cli\
         htop\
         stress\
+        bash-completion\
         python3-{devel,Cython,wheel,ipython}
 
 sudo systemctl enable vboxadd.service vboxadd-service.service

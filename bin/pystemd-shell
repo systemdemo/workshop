@@ -110,20 +110,7 @@ def bash_socal():
 )"""
     )
 
-def pystemd_shell_service(name="pystemd-name-server.service"):
-    unit_clean(name)
-    cmd = shlex.quote(subprocess.list2cmdline([sys.executable, *sys.argv]))
-    return _epd(
-        f"""pystemd.run({cmd},
-    service_type='notify',
-    stdin=sys.stdin, stdout=sys.stdout, 
-    wait=True, pty=True,
-    extra={{
-        'TimeoutStartSec': 300,
-    }},
-    name='{name}'
-)"""
-    )
+
 
 
 def home_system_protect_socal():
@@ -263,7 +250,7 @@ def chroot_socal():
 
 def exit():
     shell.magic("%clear")
-    print('we are done!!!')
+    print('Goodbye and thanks for all the fish!!!')
     shell.exiter()
 
 
@@ -326,6 +313,26 @@ def demo():
     shell.show_banner(display_banner)
     shell.mainloop()
 
+def daemon_demo_service(name="daemon-demo-service.service"):
+    unit_clean(name)
+    cmd = shlex.quote(subprocess.list2cmdline([sys.executable, *sys.argv]))
+    extra = {
+        'TimeoutStartSec': 300,
+        'WatchdogSec': 299,
+    }
+    env = {"UNIT_NAME" : name}
+    _epd(
+        f"""pystemd.run({cmd},
+    service_type='notify',
+    stdin=sys.stdin, stdout=sys.stdout, 
+    wait=True, pty=True,
+    env={env},
+    extra={extra},
+    name='{name}'
+)"""
+    )
+    exit()
+
 ### pystemd.future libs
 def cpu_waste(timeout):
     t0= time.time()
@@ -333,6 +340,9 @@ def cpu_waste(timeout):
         2**64 -1
     
     return 2**64 -1
+
+def systemctl(text):
+    subprocess.run(f"systemctl {text}", shell=True)
 
 def restart():
     os.execv(sys.executable, (sys.executable, *sys.argv))
