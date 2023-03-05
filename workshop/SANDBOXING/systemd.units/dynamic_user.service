@@ -1,0 +1,3 @@
+[Service]
+DynamicUser=yes
+ExecStart=sleep infinity

@@ -1,0 +1,6 @@
+[Service]
+ProtectHome=yes
+ProtectSystem=full
+PrivateTmp=true
+BindPaths=/usr/lib/systemd
+ExecStart=sleep infinity

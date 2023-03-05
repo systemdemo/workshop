@@ -96,13 +96,13 @@ Save the contents and then run:
 Some of the features we will be demoing do not work well when SELinux is set to enforcing mode. The virtual machine we will be using already sets SELinux to permissive mode. You can verify this in the virtual machine by running:
 
 ```bash
-[~]# getenforce
+[~] getenforce
 ```
 
 If `getenforce` says you are in enforcing mode, you can set it to permissive by running:
 
 ```bash
-[~]# setenforce Permissive
+[~] setenforce Permissive
 ```
 
 ---
