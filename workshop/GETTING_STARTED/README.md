@@ -71,6 +71,9 @@ Virtual machines on laptops are useful for development, testing, or any other ep
 
 To shut down the virtual machine, run the `vagrant halt` command. To delete it entirely, use the `vagrant destroy` command.
 
+## Wireshark?
+There is only one example that uses Wireshark. If you have Wireshark installed, great! If you don't, it's probably easy to install, but for just one exercise, it's probably not worth it. It's up to you!
+
 ## Configuring Your Environment
 
 If you want to configure your environment to do things like setting the editor (we are going to be editing files and unless you are fine with nano, you might want to change your editor), create a file in `conf/bashrc.local.conf` in the workshop repo, and then re-provision (or destroy and recreate) the virtual machine. Here is an example of what the contents could look like:
