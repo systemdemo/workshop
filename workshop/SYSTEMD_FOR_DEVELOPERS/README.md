@@ -968,3 +968,32 @@ Mar 07 02:58:48 eth50-1.rsw1ah.30.frc4.tfbnw.net systemd[1]: daemon-demo-service
 Mar 07 02:58:48 eth50-1.rsw1ah.30.frc4.tfbnw.net systemd[1]: daemon-demo-service.service: Failed with result 'watchdog'.
 ```
 
+## Lets go back in, change main pid.
+
+We are going to try to tell systemd to track another process (change the MainPID of the unit). Lets first go back in the demo:
+
+
+```
+[~]# /opt/bin/pystemd-shell  
+...
+
+In [1]: daemon_demo_service
+...
+```
+
+now lets start a new process:
+
+```
+In [1]: p = subprocess.Popen(['nohup', 'sleep', 'infinity'])
+
+nohup: ignoring input and appending output to 'nohup.out'
+In [2]: pystemd.daemon.notify(False, MainPID=p.pid, watchdog_usec=0, ready=1)
+Out[2]: 1
+
+```
+
+We did a lot in one go; we created a process with `nohup` (so it's daemonized), then we 1) set the main PID of the process to that, 2) disabled the watchdog, and 3) marked the unit as ready. 
+
+From now on, `pystemd-shell` is no longer the main process of the unit and can't send any more notify messages. This can be changed with the option [`NotifyAccess=exec`](https://www.freedesktop.org/software/systemd/man/systemd.service.html#NotifyAccess=), which allows `pystemd-shell` (a process started by systemd) and `sleep infinity` (the `MainPID` of the service) to send messages to the notify socket.
+
+

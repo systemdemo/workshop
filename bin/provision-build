@@ -65,6 +65,9 @@ EOF
 cat <<EOF > /root/.bash_profile
 # .bash_profile
 
+# lets clean failed units
+systemctl reset-failed
+
 # Get the aliases and functions
 if [ -f ~/.bashrc ]; then
     . ~/.bashrc
