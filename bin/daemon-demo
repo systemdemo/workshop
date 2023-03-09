@@ -6,7 +6,7 @@ SESSION=$(mktemp | base64)
 
 tmux new-session -d -s $SESSION
 tmux rename-window -t $SESSION:1 'Demo'
-tmux send-keys -t 'Demo' "/opt/bin/pystemd-shell" C-m "daemon_demo_service" C-m
+tmux send-keys -t 'Demo' "pystemd-shell" C-m "daemon_demo_service" C-m
 tmux split-window -t $SESSION:1 -v
 tmux send-keys -t 'Demo' "watch systemctl status daemon-demo-service.service" C-m
 
