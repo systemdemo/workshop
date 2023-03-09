@@ -4,7 +4,7 @@
 
 Vagrant.configure("2") do |config|
   config.vm.box = "aleivag/fedora37"
-  config.vm.box_version = "2023.03.06"
+  config.vm.box_version = "2023.03.08-2"
   config.vm.box_check_update = false
 
   config.vm.synced_folder "workshop", "/opt/workshop"
