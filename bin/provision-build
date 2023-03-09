@@ -1,6 +1,11 @@
 #!/bin/bash
 set -ex
 
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit
+fi
+
 echo command executed as $(whoami)
 
 DEBIAN_ROOT="/opt/debian"
@@ -10,6 +15,7 @@ PYSTEMD_REPO="https://github.com/systemd/pystemd"
 sudo mkdir -p "$DEBIAN_ROOT" "$PYSTEMD_SRC"
 sudo dnf install -y \
         git\
+        gcc\
         libX{11,t,ext,mu}\
         debootstrap\
         systemd-devel\
@@ -27,7 +33,11 @@ sudo dnf install -y \
         bash-completion\
         python3-{devel,Cython,wheel,ipython}
 
-sudo systemctl enable vboxadd.service vboxadd-service.service
+
+if [[ -e /usr/lib/systemd/system/vboxadd.service ]]; then
+    echo "enabling vbox special services"
+    sudo systemctl enable vboxadd.service vboxadd-service.service
+fi
 
 sudo systemctl disable auditd.service
 sudo systemctl reset-failed
@@ -45,13 +55,15 @@ sudo python3 -m pip install climage
 
 mkdir -p /etc/systemd/system.conf.d
 
-cat <<EOF > /home/vagrant/.bash_profile
+if [[ -e "/home/vagrant" ]]; then
+    # sets a shell for vagrant users
+    cat <<EOF > /home/vagrant/.bash_profile
 # .bash_profile
 # this file was created for the workflow to move directly to root
 
 # Get the aliases and functions
 if [ -f ~/.bashrc ]; then
-	. ~/.bashrc
+    . ~/.bashrc
 fi
 
 # auto cd into workshop directory
@@ -61,6 +73,7 @@ test -e /opt/workshop/ && cd /opt/workshop/
 exec sudo su -
 
 EOF
+fi
 
 cat <<EOF > /root/.bash_profile
 # .bash_profile
@@ -103,6 +116,12 @@ bind-key Q kill-window
 
 EOF
 
+
+cat <<EOF > /etc/profile.d/workshop2path.sh
+if [[ -e "/usr/local/src/workshop" ]]; then
+        export PATH="/usr/local/src/workshop/bin:\${PATH}"
+fi
+EOF
 
 # cleanup root 
 sudo dnf clean all 

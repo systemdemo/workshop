@@ -3,10 +3,17 @@
 import pathlib
 import subprocess
 
+ROOT_DIR = pathlib.Path(__file__).resolve().absolute().parent.parent
+
+print(f"Provisioning host, from {ROOT_DIR}")
+
 SYSTEMD_CONF = pathlib.Path("/etc/systemd/system")
-WORKSHOP = pathlib.Path("/opt/workshop")
-CONF = pathlib.Path("/opt/conf")
 SYSTEMD_CONF_PATH = pathlib.Path("/etc/systemd/system.conf.d")
+PROFILE_D = pathlib.Path("/etc/profile.d/")
+
+WORKSHOP = ROOT_DIR / "workshop"
+CONF = ROOT_DIR / "conf"
+
 
 SYSTEMD_ENVS_SRC = [
     WORKSHOP_ENVS := CONF / "workshop-env.conf",
@@ -43,4 +50,15 @@ for conf in SYSTEMD_ENVS_SRC:
     if org != dst:
         systemd_conf.write_bytes(dst)
         subprocess.run(["systemctl", "daemon-reload"], check=True)
+
+for conf in CONF.glob("profile.d/*"):
+    conf_name = conf.name
+    dst_conf = PROFILE_D / conf_name
+
+    if dst_conf.exists():
+        dst_conf.unlink()
+    
+    print(f"{dst_conf} -> {conf}")
+    dst_conf.symlink_to(conf)
+
 

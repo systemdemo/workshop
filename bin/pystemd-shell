@@ -29,12 +29,16 @@ if Path("/opt/pystemd/examples/").exists():
     sys.path = sys.path + ["/opt/pystemd/examples/"]
     import future_cpucap_pool, future_cpucap_process
 
+ROOT = Path(__file__).resolve().absolute().parent.parent
+
 stdout = sys.stdout
 stdin = sys.stdin
 stderr = sys.stderr
 
+
+
 DEBIAN_ROOT = "/opt/debian"
-PYSTEMD_LOGO = "/opt/conf/Pystemd_g30.png"
+PYSTEMD_LOGO = (ROOT / "conf/Pystemd_g30.png").as_posix()
 
 display_banner = f"""
 
