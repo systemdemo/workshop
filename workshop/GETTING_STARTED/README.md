@@ -35,6 +35,22 @@ git clone https://github.com/systemdemo/workshop.git
 
 This will take care of downloading a base image and starting a virtual box machine with it. Feel free take a sneak peak at the [Vagrantfile](https://github.com/systemdemo/workshop/blob/main/Vagrantfile) to understand what it's doing.
 
+# Hey I can't run your virtualbox, what now?
+
+Well, this happens to M1/M2 Mac owners while VirtualBox is still in development for them, but not all hope is lost. You can still provision your own server. All you need is a Fedora 37 virtual machine, which can be on your own machine or on the cloud. So, grab one of those nice free tiers and you can start provisioning. Just follow the instructions below.
+
+WARNING: These instructions are quite intrusive. Please use a new/fresh instance.
+
+```
+[root@~] dnf install -y git &&\
+    git clone https://github.com/systemdemo/workshop /usr/local/src/workshop &&\
+    bash /usr/local/src/workshop/bin/provision-build &&\
+    python3 /usr/local/src/workshop/bin/provision-host &&\
+    echo "I did it!"
+```
+
+If you come to our demo, we might have some Linode micro-instances to share.
+
 # Once the machine is up, what do I do?.
 
 ## Access the Virtual Machine
