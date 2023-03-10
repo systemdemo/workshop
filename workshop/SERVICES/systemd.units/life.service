@@ -1,0 +1,6 @@
+[Unit]
+Requires=water.service
+After=water.service
+
+[Service]
+ExecStart=echo wow

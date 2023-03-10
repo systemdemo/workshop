@@ -1,0 +1,6 @@
+[Unit]
+Before=human.service
+
+[Service]
+ExecStart=echo rawr
+RemainAfterExit=yes

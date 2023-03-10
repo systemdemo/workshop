@@ -1,0 +1,3 @@
+[Service]
+ExecStart=echo oogabooga
+RemainAfterExit=yes

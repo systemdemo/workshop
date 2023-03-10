@@ -1,0 +1,6 @@
+[Unit]
+Wants=bone.service
+
+[Service]
+Type=oneshot
+ExecStart=echo woof
