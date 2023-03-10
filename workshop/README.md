@@ -10,5 +10,5 @@
 6. [Sandboxing](SANDBOXING/README.md)
 7. [Deep Dive Into Services](SERVICES/README.md)
    1. [systemd-analyze security nginx](SERVICES/systemd-analyze-nginx.md)
-   2. WIP: [Dependencies and More](SERVICES/dependencies.md)
+   2. [Dependencies and More](SERVICES/dependencies.md)
    3. WIP: [systemd-analyze verify](SERVICES/systemd-analyze-verify.md)
