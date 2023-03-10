@@ -93,14 +93,15 @@ Chroot (short for "change root") is a Unix command that allows a user to change 
 ```
 [~] chroot /opt/debian
 [~] cat /etc/os-release
+[~] grep vagrant /etc/passwd
 [~] touch /meow
 ```
 
-/opt/debian is the root directory of a Debian distribution we've provided for you. Looking at /etc/os-release, you can tell that from the current view of the file system it appears that you are on a Debian host! If you exit the chroot and look at /etc/os-release again you'll see that you're back in the view of a Fedora host:
+/opt/debian is the root directory of a Debian distribution we've provided for you. Looking at /etc/os-release, you can tell that from the current view of the file system it appears that you are on a Debian host! You will also see that there is no vagrant user in this chroot, unlike on the host. If you check outside the chroot and look at /etc/os-release and /etc/passwd, you'll see that you're back in the view of a Fedora host:
 
 ```
-[~] exit
 [~] cat /etc/os-release
+[~] grep vagrant /etc/passwd
 ```
 
 What about the file /meow that we created? You will find it in the original (outside of the chroot) directory, /opt/debian/meow:
@@ -155,22 +156,35 @@ DynamicUser=yes
 ExecStart=sleep infinity
 ```
 
-Start the service and get the PID:
+Start the service:
 
 ```
 [~] systemctl start dynamic_user
-[~] systemctl show --value -p MainPID dynamic_user
 ```
 
-We can get the user of the running process in this service by using the `ps` command:
+We can get the user of the running process in this service by using the `ps` command and passing the PID running in the service:
 
 ```
-[~] ps -p <PID output by the previous command> -o user,uid,pid,command,cgroup
+[~] ps -p $(systemctl show --value -p MainPID dynamic_user) -o user,uid,pid,command,cgroup
 ```
 
-This command shows the name of the user running the PID, the UID, the PID, the command, and the cgroup associated. Notice that the user is not root, but should also not be any user that exists permanently on the system.
+This command shows the name of the user running the PID, the UID, the PID, the command, and the cgroup associated. Notice that the user is not root, but should also not be any user that exists permanently on the system (the user will usually be the name of the unit). You can verify it is not a part of the system by checking /etc/passwd:
 
-Stop the service when you are done.
+```
+[~] cat /etc/passwd
+```
+
+So how do you get the user details? Systemd implements this feature by providing nss-systemd, a plug-in module for the Name Service Switch (NSS) libraries. If you use `getent`, which uses NSS, you can see the user:
+
+```
+[~] getent passwd
+```
+
+Stop the service when you are done. If you run `getent` again you will see that the user is gone:
+
+```
+[~] getent passwd
+```
 
 ## Network Isolation
 
@@ -190,7 +204,7 @@ Once this successfully runs you will be in a shell that has inherited the namesp
 [~] ip address
 ```
 
-You can check that network is not available by running `ping` from within the namespace:
+You can check that network is not available by running `ping` from within the namespace to try and hit Google's public DNS server:
 
 ```
 [~] ping -c 1 8.8.8.8
@@ -200,16 +214,20 @@ Exit from the `systemd-run` shell when you are done.
 
 You'll notice that `PrivateNetwork=` is all or nothing. The other way to isolate the network is to use `IPAddressDeny=` and `IPAddressAllow=`. This allows more controlled network isolation by using eBPF to filter at the socket level. It does not use network namespaces (and so `nsenter` will not work to test this).
 
-Let's try the previous commands, but now with 8.8.8.8 denied:
+Let's try the previous commands, but now with 8.8.8.8 allowed, and all other addresses under this space masked:
 ```
-[~] systemd-run --pty -p IPAddressDeny=8.8.8.8 /bin/bash
+[~] systemd-run --pty -p IPAddressAllow=8.8.8.8 -p IPAddressDeny=8.8.0.0/8 /bin/bash
 [~] ip address
-[~] ping -c 1 8.8.8.8
 ```
 
-You can see that we still have interfaces other than "lo" set up. If you try to ping a different address it should still work:
+You can see that we still have interfaces other than "lo" set up. If you try to ping 8.8.4.4, which is Google's other DNS server, it will not work:
 ```
 [~] ping -c 1 8.8.4.4
+```
+
+But if you ping 8.8.8.8, the address we allowed, it will work:
+```
+[~] ping -c 1 8.8.8.8
 ```
 
 Exit from the `systemd-run` shell when you are done.
