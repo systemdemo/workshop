@@ -374,7 +374,7 @@ You will see that we still have the unit running, but the startup time is now ve
 Check:
 
 ```
-[~] journalctl -–no-pager -u myfirstservice.service -g "myfirstservice.service: "
+[~] journalctl --no-pager -u myfirstservice.service -g "myfirstservice.service: "
 ```
 
 And you'll see:
