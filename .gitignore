@@ -95,3 +95,7 @@ conf/*.local*
 
 # exange items
 conf/spool/
+
+# container Files
+Containerfile
+Dockerfile

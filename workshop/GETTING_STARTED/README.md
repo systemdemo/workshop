@@ -37,6 +37,7 @@ This will take care of downloading a base image and starting a virtual box machi
 
 # Hey I can't run your virtualbox, what now?
 
+## use the cloud
 Well, this happens to M1/M2 Mac owners while VirtualBox is still in development for them, but not all hope is lost. You can still provision your own server. All you need is a Fedora 37 virtual machine, which can be on your own machine or on the cloud. So, grab one of those nice free tiers and you can start provisioning. Just follow the instructions below.
 
 WARNING: These instructions are quite intrusive. Please use a new/fresh instance.
@@ -50,6 +51,10 @@ WARNING: These instructions are quite intrusive. Please use a new/fresh instance
 ```
 
 If you come to our demo, we might have some Linode micro-instances to share.
+
+## use a container
+
+You can install podman and then run `./workshopctl build` and then subsequent `./workshopctl run`.
 
 # Once the machine is up, what do I do?.
 

@@ -10,42 +10,60 @@ import contextlib
 from tempfile import TemporaryDirectory
 from contextlib import ExitStack
 from datetime import datetime
-import base64
 
 
 THIS_DIR = Path(__file__).absolute().resolve().parent
 VENV = THIS_DIR / "venv"
 PYTHON = VENV / "bin/python3"
+SUDO = "/usr/bin/sudo"
+CONF_DIR = THIS_DIR / "conf"
+WORKSHOP = THIS_DIR / "workshop"
 
-def reexec(python=PYTHON):
-    os.execv(python, (python, *sys.argv))
+DEFAULT_CONTAINER_BASE = "registry.fedoraproject.org/fedora:37"
+DEFAULT_CONTAINER_IMAGE_NAME = "localhost/systemd-workshop"
+
+
+def reexec(python=PYTHON, sudo=False):
+    binary = SUDO if sudo else python
+    ecmd = (python, *sys.argv)
+    if sudo:
+        ecmd = (SUDO, *ecmd)
+    os.execv(binary, ecmd)
+
+def asroot():
+    if os.getuid() != 0:
+        reexec(sudo=True)
+
 
 if not VENV.exists():
-  venv.create(
-    VENV, 
-    system_site_packages=False, 
-    clear=True, 
-    symlinks=False, 
-    with_pip=True, 
-    prompt=None, 
-    # upgrade_deps=False
-  )
+    venv.create(
+        VENV,
+        system_site_packages=False,
+        clear=True,
+        symlinks=False,
+        with_pip=True,
+        prompt=None,
+        # upgrade_deps=False
+    )
 
 if not Path(sys.executable).samefile(PYTHON):
-  # re exec but in the venv
-  reexec()
+    # re exec but in the venv
+    reexec()
 
 try:
     import click
+    import jinja2
 except ImportError:
-    subprocess.run([sys.executable, "-m", "pip", "install", "click"], check=True)
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", "click", "jinja2"], check=True
+    )
     reexec()
-
 
 
 BOX_DIR = Path(__file__).resolve().absolute().parent / "boxes"
 BIN_DIR = Path(__file__).resolve().absolute().parent / "bin"
 WORKSHOP_DIR = Path(__file__).resolve().absolute().parent / "workshop"
+
 
 class Vagrant:
     def __init__(self, base, base_box):
@@ -67,36 +85,35 @@ end
 """
 
     def _vagrant_call(self, cmd, *args, **kwargs):
-        subprocess.check_call(['vagrant', cmd, *args], cwd=self.base, **kwargs)
+        subprocess.check_call(["vagrant", cmd, *args], cwd=self.base, **kwargs)
 
     def ssh(self, *args):
-        self._vagrant_call('ssh', *args)
-    
+        self._vagrant_call("ssh", *args)
+
     def shell(self):
-        self._vagrant_call('ssh')
-    
-    
+        self._vagrant_call("ssh")
+
     def run(self, script):
         import base64
-        s = base64.encodebytes(script.encode()).decode().replace('\n', '').rstrip()
-        cmd = f"echo {s} | base64 --decode - | sudo bash"
 
-        self._vagrant_call('ssh', "--", cmd)
+        s = base64.encodebytes(script.encode()).decode().replace("\n", "").rstrip()
+        cmd = f"echo {s} | base64 --decode - | sudo bash"
+        self._vagrant_call("ssh", "--", cmd)
 
     def halt(self):
-        self._vagrant_call('halt')
-    
+        self._vagrant_call("halt")
+
     def up(self):
-        self._vagrant_call('up')
+        self._vagrant_call("up")
 
     def destroy(self):
-        self._vagrant_call('destroy', '--force')
+        self._vagrant_call("destroy", "--force")
 
     def package(self, pkg):
-        self._vagrant_call('package', '--output', pkg)
+        self._vagrant_call("package", "--output", pkg)
 
     def __enter__(self):
-        (self.base / 'Vagrantfile').write_text(self.vagrant_file)
+        (self.base / "Vagrantfile").write_text(self.vagrant_file)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -107,14 +124,202 @@ end
 def main():
     ...
 
+
+@main.group()
+def container():
+    ...
+
+
+class Container:
+    def __init__(self, image_name):
+        self.image_name = image_name
+        self.tdir = TemporaryDirectory()
+        self.container_name = f"{Path(self.tdir.name).name}"
+
+    def __run(self, *args, **kwargs):
+        cmd = ["sudo", "podman", *args]
+        print(cmd)
+        line = subprocess.list2cmdline(cmd)
+        print(f"executing {line}")
+        subprocess.run(line, **{**kwargs, "check": True, "shell": True})
+
+    def run(self):
+        self.__run(
+            "container",
+            "run",
+            "-d",
+            "--privileged",
+            "--name",
+            self.container_name,
+            self.image_name,
+        )
+
+    def rm(self):
+        self.__run(
+            "container",
+            "rm",
+            "--force",
+            "--ignore",
+            self.container_name,
+        )
+
+    def shell(self, shell="/bin/bash"):
+        self.__run(
+            "container",
+            "exec",
+            "-ti",
+            self.container_name,
+            "systemd-run",
+            "--tty",
+            shell,
+        )
+
+    def __enter__(self):
+        self.run()
+        while True:
+            with contextlib.suppress(Exception):
+                self.shell("/bin/true")
+                break
+
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.rm()
+
+
+@container.command()
+def run():
+    asroot()
+    with Container(f"{DEFAULT_CONTAINER_IMAGE_NAME}:latest") as c:
+        c.shell()
+
+
+
+
+@container.command()
+@click.option("--base", default=DEFAULT_CONTAINER_BASE)
+@click.option("--image-name", default=DEFAULT_CONTAINER_IMAGE_NAME)
+def build(base, image_name):
+    dnf_packages = [
+        "",
+        "git",
+        "gcc",
+        "debootstrap",
+        "systemd-devel",
+        "mkosi",
+        "vim",
+        "tmux",
+        "links",
+        "nginx",
+        "strace",
+        "procps",
+        "passwd",
+        "lsof",
+        "xq",
+        "wireshark-cli",
+        "util-linux-user",
+        "iputils",
+        "htop",
+        "stress",
+        "bash-completion",
+        "python3-devel",
+        "python3-Cython",
+        "python3-wheel",
+        "python3-ipython",
+    ]
+
+    pip_packages = [
+        "",
+        "pystemd",
+        "climage",
+    ]
+
+    (THIS_DIR / "Containerfile").write_text(
+        jinja2.Template(
+            """
+FROM {{ base }}
+
+RUN dnf install -y {{ dnf_packages }} && dnf clean all
+
+# install python
+RUN python3 -m pip install {{ pip_packages }}
+
+# change root password
+RUN echo workshop | passwd --stdin root
+
+# add debian home
+# RUN debootstrap --include 'dbus,vim' unstable /opt/debian
+
+# create a few dirs
+RUN mkdir -p /usr/local/src/workshop
+
+## Now we copy files from demo to the container
+
+# copy all files in container
+COPY . /usr/local/src/workshop
+
+#copy profile.d files
+COPY {% for conf in profile_d -%} {{ conf }} {% endfor -%} /etc/profile.d/
+
+# copy systemd units
+COPY {% for unit in systemd_units -%} {{ unit }} {% endfor -%} /etc/systemd/system/
+
+# root files
+COPY {% for conf in root_conf -%} {{ conf }} {% endfor -%} /root/
+
+# selinux
+COPY {{ selinux_config }}  /etc/selinux/config 
+
+# starts systemd
+CMD [ "/usr/sbin/init" ]
+
+        """
+        ).render(
+            base=base,
+            dnf_packages="\\\n  ".join(dnf_packages),
+            pip_packages="\\\n  ".join(pip_packages),
+            profile_d=[conf.relative_to(THIS_DIR)
+                for conf in CONF_DIR.glob("profile.d/*")
+            ],
+            selinux_config=(CONF_DIR / "workshop-selinux-config").relative_to(THIS_DIR),
+            systemd_units=[
+                unit.relative_to(THIS_DIR)
+                for unit in WORKSHOP.glob("**/systemd.units/*")
+            ],
+            root_conf=[
+                conf.relative_to(THIS_DIR)
+                for conf in (CONF_DIR / "home").iterdir()
+            ]
+        )
+    )
+
+    subprocess.run(
+        ["sudo", "podman", "build", "--rm", "-t", f"{image_name}:latest", "."]
+    )
+
+
 @main.command()
-@click.option("--build-dir", default=None, help='where to build the box')
-@click.option("--keep-vm/--destroy-vm", default=False, help='if you want to destroy the vm after building', show_default=True)
-@click.option("--build-stage", "-m", type=click.Choice(["0", "1", "n", "i", 'l']), default="n")
+@click.option("--build-dir", default=None, help="where to build the box")
+@click.option(
+    "--keep-vm/--destroy-vm",
+    default=False,
+    help="if you want to destroy the vm after building",
+    show_default=True,
+)
+@click.option(
+    "--build-stage", "-m", type=click.Choice(["0", "1", "n", "i", "l"]), default="n"
+)
 @click.option("--provision-script", type=Path, default=BIN_DIR / "provision-build")
 @click.option("--pre-provision-shell", is_flag=True, default=False)
 @click.option("--post-provision-shell", is_flag=True, default=False)
-def build(build_dir, keep_vm, build_stage, provision_script, pre_provision_shell, post_provision_shell):
+def build(
+    build_dir,
+    keep_vm,
+    build_stage,
+    provision_script,
+    pre_provision_shell,
+    post_provision_shell,
+):
     if build_stage == "0":
         base_box = "fedora/37-cloud-base"
         dest_box = BOX_DIR / "fedora/37-base.box"
@@ -123,28 +328,36 @@ def build(build_dir, keep_vm, build_stage, provision_script, pre_provision_shell
         alias_box = None
     elif build_stage == "1":
         base_box = BOX_DIR / "fedora/37-base.box"
-        dest_box = BOX_DIR / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+        dest_box = (
+            BOX_DIR
+            / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+        )
         alias_box = BOX_DIR / "fedora/37-last.box"
-    elif build_stage in ("n", 'l'):
+    elif build_stage in ("n", "l"):
         base_box = (BOX_DIR / "fedora/37-last.box").resolve()
-        dest_box = BOX_DIR / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+        dest_box = (
+            BOX_DIR
+            / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+        )
         alias_box = BOX_DIR / "fedora/37-last.box"
-    elif build_stage in 'l':
+    elif build_stage in "l":
         base_box = (BOX_DIR / "fedora/37-last.box").resolve()
         dest_box = None
         alias_box = None
     elif build_stage == "i":
         base_box = "aleivag/fedora37"
-        dest_box = BOX_DIR / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+        dest_box = (
+            BOX_DIR
+            / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+        )
         alias_box = BOX_DIR / "fedora/37-last.box"
     elif build_stage == "c":
         raise NotImplementedError("not implemented yet")
-    
 
     with ExitStack() as estack:
         if not build_dir:
             build_dir = estack.enter_context(TemporaryDirectory())
-        
+
         if not keep_vm:
             box = estack.enter_context(Vagrant(build_dir, base_box))
         else:
@@ -155,7 +368,7 @@ def build(build_dir, keep_vm, build_stage, provision_script, pre_provision_shell
         if pre_provision_shell:
             with contextlib.suppress():
                 box.shell()
-        
+
         if provision_script:
             try:
                 print(f"executing {provision_script=}")
@@ -163,7 +376,7 @@ def build(build_dir, keep_vm, build_stage, provision_script, pre_provision_shell
             except:
                 with contextlib.suppress():
                     box.shell()
-        
+
         if post_provision_shell:
             with contextlib.suppress():
                 box.shell()
@@ -173,7 +386,6 @@ def build(build_dir, keep_vm, build_stage, provision_script, pre_provision_shell
             if alias_box.exists():
                 alias_box.unlink()
             alias_box.symlink_to(dest_box.absolute())
-
 
 
 if __name__ == "__main__":
