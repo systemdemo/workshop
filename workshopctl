@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-
-
+import platform
 import sys
 import os
 from pathlib import Path
 import venv
+from shutil import which
 import subprocess
 import contextlib
 from tempfile import TemporaryDirectory
@@ -19,7 +19,7 @@ SUDO = "/usr/bin/sudo"
 CONF_DIR = THIS_DIR / "conf"
 WORKSHOP = THIS_DIR / "workshop"
 
-DEFAULT_CONTAINER_BASE = "registry.fedoraproject.org/fedora:37"
+DEFAULT_CONTAINER_BASE = "registry.fedoraproject.org/fedora:39"
 DEFAULT_CONTAINER_IMAGE_NAME = "localhost/systemd-workshop"
 
 
@@ -29,6 +29,7 @@ def reexec(python=PYTHON, sudo=False):
     if sudo:
         ecmd = (SUDO, *ecmd)
     os.execv(binary, ecmd)
+
 
 def asroot():
     if os.getuid() != 0:
@@ -40,7 +41,7 @@ if not VENV.exists():
         VENV,
         system_site_packages=False,
         clear=True,
-        symlinks=False,
+        symlinks=True,
         with_pip=True,
         prompt=None,
         # upgrade_deps=False
@@ -137,10 +138,9 @@ class Container:
         self.container_name = f"{Path(self.tdir.name).name}"
 
     def __run(self, *args, **kwargs):
-        cmd = ["sudo", "podman", *args]
-        print(cmd)
+        cmd = [which("podman") or "podmand", *args]
         line = subprocess.list2cmdline(cmd)
-        print(f"executing {line}")
+        print(f"executing '{line}'")
         subprocess.run(line, **{**kwargs, "check": True, "shell": True})
 
     def run(self):
@@ -188,25 +188,49 @@ class Container:
 
 
 @container.command()
-def run():
-    asroot()
+@click.option(
+    "--as-root/--not-as-root",
+    default=platform.system() not in ("Darwin",),
+    help=(
+        "If we should run podmand as root, a.k.a. if we should rexec as sudo. "
+        "On macOS, is not necessary to run as root, because we run inside a vm."
+    ),
+)
+def run(as_root: bool) -> None:
+    if as_root:
+        asroot()
     with Container(f"{DEFAULT_CONTAINER_IMAGE_NAME}:latest") as c:
-        c.shell()
-
-
+        try:
+            c.shell()
+        except subprocess.CalledProcessError as e:
+            sys.exit(e.returncode)
 
 
 @container.command()
-@click.option("--base", default=DEFAULT_CONTAINER_BASE)
-@click.option("--image-name", default=DEFAULT_CONTAINER_IMAGE_NAME)
-def build(base, image_name):
+@click.option("--base", default=DEFAULT_CONTAINER_BASE, show_default=True)
+@click.option("--image-name", default=DEFAULT_CONTAINER_IMAGE_NAME, show_default=True)
+@click.option(
+    "--as-root/--not-as-root",
+    default=platform.system() not in ("Darwin",),
+    help=(
+        "If we should run podmand as root, a.k.a. if we should rexec as sudo. "
+        "On macOS, is not necessary to run as root, because we run inside a vm."
+    ),
+)
+def build(base, image_name, as_root):
+    if as_root:
+        asroot()
+
     dnf_packages = [
         "",
         "git",
         "gcc",
         "debootstrap",
         "systemd-devel",
+        "systemd-container",
         "mkosi",
+        "fakeroot",
+        "fakechroot",
         "vim",
         "tmux",
         "links",
@@ -248,7 +272,7 @@ RUN python3 -m pip install {{ pip_packages }}
 RUN echo workshop | passwd --stdin root
 
 # add debian home
-# RUN debootstrap --include 'dbus,vim' unstable /opt/debian
+RUN fakeroot debootstrap --include 'dbus,vim' unstable /opt/debian
 
 # create a few dirs
 RUN mkdir -p /usr/local/src/workshop
@@ -278,8 +302,8 @@ CMD [ "/usr/sbin/init" ]
             base=base,
             dnf_packages="\\\n  ".join(dnf_packages),
             pip_packages="\\\n  ".join(pip_packages),
-            profile_d=[conf.relative_to(THIS_DIR)
-                for conf in CONF_DIR.glob("profile.d/*")
+            profile_d=[
+                conf.relative_to(THIS_DIR) for conf in CONF_DIR.glob("profile.d/*")
             ],
             selinux_config=(CONF_DIR / "workshop-selinux-config").relative_to(THIS_DIR),
             systemd_units=[
@@ -287,14 +311,13 @@ CMD [ "/usr/sbin/init" ]
                 for unit in WORKSHOP.glob("**/systemd.units/*")
             ],
             root_conf=[
-                conf.relative_to(THIS_DIR)
-                for conf in (CONF_DIR / "home").iterdir()
-            ]
+                conf.relative_to(THIS_DIR) for conf in (CONF_DIR / "home").iterdir()
+            ],
         )
     )
 
     subprocess.run(
-        ["sudo", "podman", "build", "--rm", "-t", f"{image_name}:latest", "."]
+        [which("podman"), "build", "--rm", "-t", f"{image_name}:latest", "."]
     )
 
 
