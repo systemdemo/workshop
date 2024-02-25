@@ -16,6 +16,7 @@ from pygments.lexers import PythonLexer
 from pygments.formatters import TerminalFormatter
 
 from IPython.terminal.embed import InteractiveShellEmbed
+from IPython.core.getipython import get_ipython
 
 import pystemd
 import pystemd.run
@@ -47,7 +48,11 @@ display_banner = f"""
 Welcome to pystemd-shell build to demo pystemd and systemd\n{sys.version}.
 """
 
-shell = InteractiveShellEmbed()
+if get_ipython() is None:
+    shell = InteractiveShellEmbed.instance()
+else:
+    shell = InteractiveShellEmbed()
+
 
 os.environ['EDITOR']='vim'
 
@@ -310,7 +315,11 @@ def demo():
     Entry point for the pystemd shell, it just execute a few magic commands
     and starts a interactive shell
     """
-    
+    if IPython.core.getipython.get_ipython() is None:
+        console = IPython.terminal.embed.InteractiveShellEmbed.instance()
+    else:
+        console = IPython.terminal.embed.InteractiveShellEmbed()
+
     clean_unit()
     shell.run_line_magic("autocall", "2")
     shell.run_line_magic("clear", "")

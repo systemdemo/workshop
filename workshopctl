@@ -149,6 +149,7 @@ class Container:
             "run",
             "-d",
             "--privileged",
+            *("-v", f"{THIS_DIR / 'workshop'}:/usr/local/src/workshop/workshop"),
             "--name",
             self.container_name,
             self.image_name,
@@ -170,6 +171,7 @@ class Container:
             "-ti",
             self.container_name,
             "systemd-run",
+            *("--working-directory", "/usr/local/src/workshop/workshop"),
             "--tty",
             shell,
         )
@@ -217,7 +219,8 @@ def run(as_root: bool) -> None:
         "On macOS, is not necessary to run as root, because we run inside a vm."
     ),
 )
-def build(base, image_name, as_root):
+@click.option("--run-after/--no-run-after",default=False)
+def build(base, image_name, as_root, run_after):
     if as_root:
         asroot()
 
@@ -257,10 +260,8 @@ def build(base, image_name, as_root):
         "pystemd",
         "climage",
     ]
-
-    (THIS_DIR / "Containerfile").write_text(
-        jinja2.Template(
-            """
+    CONTAINER_FILE_CONTENT = jinja2.Template(
+        """
 FROM {{ base }}
 
 RUN dnf install -y {{ dnf_packages }} && dnf clean all
@@ -294,31 +295,41 @@ COPY {% for conf in root_conf -%} {{ conf }} {% endfor -%} /root/
 # selinux
 COPY {{ selinux_config }}  /etc/selinux/config 
 
+ENV WORKSHOP_DIR=/usr/local/src/workshop/workshop
+
+WORKDIR /usr/local/src/workshop
+
 # starts systemd
 CMD [ "/usr/sbin/init" ]
 
         """
-        ).render(
-            base=base,
-            dnf_packages="\\\n  ".join(dnf_packages),
-            pip_packages="\\\n  ".join(pip_packages),
-            profile_d=[
-                conf.relative_to(THIS_DIR) for conf in CONF_DIR.glob("profile.d/*")
-            ],
-            selinux_config=(CONF_DIR / "workshop-selinux-config").relative_to(THIS_DIR),
-            systemd_units=[
-                unit.relative_to(THIS_DIR)
-                for unit in WORKSHOP.glob("**/systemd.units/*")
-            ],
-            root_conf=[
-                conf.relative_to(THIS_DIR) for conf in (CONF_DIR / "home").iterdir()
-            ],
-        )
+    ).render(
+        base=base,
+        dnf_packages="\\\n  ".join(dnf_packages),
+        pip_packages="\\\n  ".join(pip_packages),
+        profile_d=[conf.relative_to(THIS_DIR) for conf in CONF_DIR.glob("profile.d/*")],
+        selinux_config=(CONF_DIR / "workshop-selinux-config").relative_to(THIS_DIR),
+        systemd_units=[
+            unit.relative_to(THIS_DIR) for unit in WORKSHOP.glob("**/systemd.units/*")
+        ],
+        root_conf=[
+            conf.relative_to(THIS_DIR) for conf in (CONF_DIR / "home").iterdir()
+        ],
     )
+    print(CONTAINER_FILE_CONTENT)
+    (THIS_DIR / "Containerfile").write_text(CONTAINER_FILE_CONTENT)
 
     subprocess.run(
         [which("podman"), "build", "--rm", "-t", f"{image_name}:latest", "."]
     )
+
+    if run_after:
+        #TODO: replace this with just invoke run
+        with Container(f"{DEFAULT_CONTAINER_IMAGE_NAME}:latest") as c:
+            try:
+                c.shell()
+            except subprocess.CalledProcessError as e:
+                sys.exit(e.returncode)
 
 
 @main.command()
