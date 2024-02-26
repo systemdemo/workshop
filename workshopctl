@@ -144,12 +144,24 @@ class Container:
         subprocess.run(line, **{**kwargs, "check": True, "shell": True})
 
     def run(self):
+        kernel_version = platform.release()
         self.__run(
             "container",
             "run",
             "-d",
             "--privileged",
             *("-v", f"{THIS_DIR / 'workshop'}:/usr/local/src/workshop/workshop"),
+            #eBPF stuff
+            *("-v", "/sys/kernel/debug:/sys/kernel/debug"),
+            *("-v", "/sys/kernel/tracing:/sys/kernel/tracing"),
+            *("-v", "/sys/fs/cgroup:/sys/fs/cgroup"),
+            *("-v", "/sys/fs/bpf:/sys/fs/bpf"),
+            # this 2 mounts shoud, be smarters
+            *(
+                "-v",
+                f"/usr/lib/modules/{kernel_version}/build:/usr/src/kernels/{kernel_version}:ro",
+            ),
+            *("-v", f"/usr/lib/modules/{kernel_version}:/lib/modules/{kernel_version}:ro"),
             "--name",
             self.container_name,
             self.image_name,
@@ -239,6 +251,8 @@ def build(base, image_name, as_root, run_after):
         "links",
         "nginx",
         "strace",
+        "bcc-tools",
+        "python3-bcc",
         "procps",
         "passwd",
         "lsof",

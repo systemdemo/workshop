@@ -1,19 +1,35 @@
 
-Now we are going to talk about a topic that is not really systemd related, but we think it's interesting to talk about nevertheless, and we do this tutorial to have fun,and talk about fun stuff.
+Now we are going to talk about a topic that is not really systemd related, but we think it's interesting to talk about 
+nevertheless, and we do this tutorial to have fun,and talk about fun stuff.
 
-The topic it’s titled “Extended Berkeley Packet Filter”, but you might have heard of it as eBPF (or just BPF). If you work in the system space and you haven't heard of it, talk to us, as we wanna know how it feels to live under a rock for the last 10 years.
+The topic it’s titled “Extended Berkeley Packet Filter”, but you might have heard of it as eBPF (or just BPF, because lets 
+be honest, no one talks about BPF anymore). 
+If you work in the system space and you haven't heard of it, talk to us, as we wanna know how it feels to live under a 
+rock for the last 10 years.
 
-Jokes aside, eBPF is perhaps one of the more hottest topics that comes out in conversation about systems profiling, management and systems in general.
+Jokes aside, eBPF is perhaps one of the hottest topics that comes out in conversation about systems profiling, management 
+and systems in general.
 
 
 # What is eBPF.
 
-eBPF is a powerful and flexible technology that allows you to write custom code that can be attached to various points in the Linux kernel, _without needing to recompile the kernel itself_. It's the successor of BPF (Berkeley Packet Filter, originally developed in 1992 in… well berkley) because it extends its capabilities and design (hence the name). 
+eBPF is a powerful and flexible technology that allows you to write custom code that can be attached to various points 
+in the Linux kernel, _without needing to recompile the kernel itself_. It's the successor of BPF (Berkeley Packet Filter, 
+originally developed in 1992 in… well berkley) because it extends its capabilities and design (hence the name). 
 
-In simpler terms, you write a program, compile it, and then you ask the kernel to run it for you. Does this sound familiar? There is another very famous programming language that people write, that reacts and interacts with a “bigger machine” without needing to recompile this machine, and that's javascript. In many ways, eBPF is the javascript of the kernel. 
+In simpler terms, you write a program, compile it, and then you ask the kernel to run it for you. Does this sound familiar? 
+There is another very famous programming language that people write, that reacts and interacts with a “bigger machine” 
+without needing to recompile this machine, and that's javascript. In many ways, eBPF is the javascript of the kernel. 
 
-One last thing to say before we dive into eBPF, is  that the world of eBPF seems to be divided in 2 groups of people, 1) people who have never heard of it, or have but are not clear on what it is, and 2) people who use eBPF to do very complex things, and very vocal about it, giving the impression to the first group that eBPF is hard. Well here we aim to show you all  that even though you can do complex things, it’s very easy to get started.
+One last thing to say before we dive into eBPF, is  that the world of eBPF seems to be divided in 2 groups of people, 
+1) people who have never heard of it, or have but are not clear on what it is, and
+2) people who use eBPF to do very complex things, and very vocal about it, giving the impression to the first group that 
+eBPF is hard. 
 
+Well here we aim to show you all  that even though you can do complex things, it’s very easy to  get started.
+
+If you would like to know more about the history of eBPF there is [a fun documentary](https://youtu.be/Wb_vD3XZYOA?si=RRxG_rUwXxTf2xnh) 
+about it, that even have Brendan Gregg saying "this is like putting javascript into the kernel". 
 
 # Kernel space/User space and syscalls.
 
