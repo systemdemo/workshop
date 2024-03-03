@@ -8,7 +8,7 @@
 import os
 
 
-LOGGING_PREFIX= "#"*10
+LOGGING_PREFIX = "#" * 10
 
 print("MYFLAG")
 

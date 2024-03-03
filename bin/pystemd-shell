@@ -37,7 +37,6 @@ stdin = sys.stdin
 stderr = sys.stderr
 
 
-
 DEBIAN_ROOT = "/opt/debian"
 PYSTEMD_LOGO = (ROOT / "conf/Pystemd_g30.png").as_posix()
 
@@ -54,60 +53,64 @@ else:
     shell = InteractiveShellEmbed()
 
 
-os.environ['EDITOR']='vim'
+os.environ["EDITOR"] = "vim"
 
 THIS_DIR = Path(__file__).absolute().resolve().parent
 
-def _epp(cmd): 
+
+def _epp(cmd):
     shell.run_line_magic("clear", "")
-    print('>>>', highlight(cmd, PythonLexer(), TerminalFormatter()), '\n')
+    print(">>>", highlight(cmd, PythonLexer(), TerminalFormatter()), "\n")
 
 
 def _epd(cmd):
     with suppress(Exception):
         unit_clean()
-    _epp(cmd) # print the command
-    exec(cmd) # execute it
+    _epp(cmd)  # print the command
+    exec(cmd)  # execute it
     return cmd
+
 
 def unit_status(unit):
     shell.run_line_magic("clear", "")
     if isinstance(unit, pystemd.systemd1.Unit):
         unit = unit.Unit.Names[0].decode()
-    cmd = f'systemctl status {unit} --no-pager'
-    print(f'[shell] {cmd}\n')
+    cmd = f"systemctl status {unit} --no-pager"
+    print(f"[shell] {cmd}\n")
     subprocess.call(shlex.split(cmd))
+
 
 def unit_cat(unit):
     shell.run_line_magic("clear", "")
     if isinstance(unit, pystemd.systemd1.Unit):
         unit = unit.Unit.Names[0].decode()
-    cmd = f'systemctl cat {unit} --no-pager'
-    print(f'[shell] {cmd}\n')
+    cmd = f"systemctl cat {unit} --no-pager"
+    print(f"[shell] {cmd}\n")
     subprocess.call(shlex.split(cmd))
+
 
 def unit_stop(unit):
     shell.run_line_magic("clear", "")
     if isinstance(unit, pystemd.systemd1.Unit):
         unit = unit.Unit.Names[0].decode()
-    cmd = f'systemctl stop {unit}'
-    print(f'[shell] {cmd}\n')
+    cmd = f"systemctl stop {unit}"
+    print(f"[shell] {cmd}\n")
     subprocess.call(shlex.split(cmd))
 
 
-
-def unit_clean(unit='mys.service'):
+def unit_clean(unit="mys.service"):
     unit_stop(unit)
-    subprocess.call(shlex.split('systemctl reset-failed'))
+    subprocess.call(shlex.split("systemctl reset-failed"))
+
 
 status_unit = unit_status
 stop_unit = unit_stop
 clean_unit = unit_clean
 
+
 def echo_socal():
-    return _epd(
-        """pystemd.run(['/bin/echo', 'Hi SOCAL!!!'], stdout=sys.stdout)"""
-    )
+    return _epd("""pystemd.run(['/bin/echo', 'Hi SOCAL!!!'], stdout=sys.stdout)""")
+
 
 def bash_socal():
     return _epd(
@@ -120,10 +123,9 @@ def bash_socal():
     )
 
 
-
-
 def home_system_protect_socal():
-    return _epd("""pystemd.run(
+    return _epd(
+        """pystemd.run(
     ['/bin/bash'], 
     stdin=sys.stdin, stdout=sys.stdout, 
     wait=True, pty=True, 
@@ -132,11 +134,13 @@ def home_system_protect_socal():
         'ProtectHome': 'true',
         'ProtectSystem': 'strict',
     }
-)""")
+)"""
+    )
 
 
 def directories_socal():
-    return _epd(f"""pystemd.run(
+    return _epd(
+        f"""pystemd.run(
     ['/bin/bash'], 
     stdin=sys.stdin, stdout=sys.stdout, 
     wait=True, pty=True, 
@@ -152,11 +156,13 @@ def directories_socal():
 
         
     }}
-)""")
+)"""
+    )
 
 
 def venv_socal():
-    return _epd("""pystemd.run(
+    return _epd(
+        """pystemd.run(
     ['/var/cache/mys/bin/python', '-c', 'import six; print(six.__file__); input()'], 
     stdin=sys.stdin, stdout=sys.stdout, 
     wait=True, pty=True, 
@@ -171,11 +177,13 @@ def venv_socal():
             ('/usr/share/venvs.conf/pyvenv-wo-site-packages.cfg', '/var/cache/mys/pyvenv.cfg', False, 0)
         ],
     }
-)""")
+)"""
+    )
 
 
 def private_socal():
-    return _epd("""pystemd.run(
+    return _epd(
+        """pystemd.run(
     ['/bin/bash'], 
     stdin=sys.stdin, stdout=sys.stdout, 
     wait=True, pty=True, 
@@ -188,11 +196,13 @@ def private_socal():
         'PrivateNetwork': True,
         'PrivateDevices': True,
     }
-)""")
+)"""
+    )
 
 
 def dynamic_user_socal():
-    return _epd("""pystemd.run(
+    return _epd(
+        """pystemd.run(
     ['/bin/bash'], 
     stdin=sys.stdin, stdout=sys.stdout, 
     wait=True, pty=True, 
@@ -200,11 +210,13 @@ def dynamic_user_socal():
     extra={
         'DynamicUser': True,
     }
-)""")
+)"""
+    )
 
 
 def dynamic_user_show_id_socal():
-    return _epd("""pystemd.run(
+    return _epd(
+        """pystemd.run(
     ['/usr/bin/id'], 
     stdin=sys.stdin, stdout=sys.stdout, 
     wait=True, pty=True, 
@@ -212,11 +224,13 @@ def dynamic_user_show_id_socal():
     extra={
         'DynamicUser': True,
     }
-)""")
+)"""
+    )
 
 
 def ip_user_socal():
-    return _epd("""pystemd.run(
+    return _epd(
+        """pystemd.run(
     ['/bin/bash'], 
     stdin=sys.stdin, stdout=sys.stdout, 
     wait=True, pty=True, 
@@ -225,11 +239,13 @@ def ip_user_socal():
         'IPAddressDeny': [(socket.AF_INET, (0,0,0,0), 0)], # 0.0.0.0/0
         'IPAddressAllow': [(socket.AF_INET, (8,8,8,8), 32)], # 8.8.8.8/32
     }
-)""")
+)"""
+    )
 
 
 def cgroup_socal():
-    return _epd("""pystemd.run(
+    return _epd(
+        """pystemd.run(
     ['/bin/bash'], 
     stdin=sys.stdin, stdout=sys.stdout, 
     wait=True, pty=True, 
@@ -240,11 +256,13 @@ def cgroup_socal():
         'MemorySwapMax': 0,
         'TasksMax': 5
     }
-)""")
+)"""
+    )
 
 
 def chroot_socal():
-    return _epd(f"""pystemd.run(
+    return _epd(
+        f"""pystemd.run(
     ['/bin/bash'], 
     stdin=sys.stdin, stdout=sys.stdout, 
     wait=True, pty=True, 
@@ -254,12 +272,13 @@ def chroot_socal():
         
         'MountAPIVFS': True,
     }}
-)""" )
+)"""
+    )
 
 
 def exit():
     shell.magic("%clear")
-    print('Goodbye and thanks for all the fish!!!')
+    print("Goodbye and thanks for all the fish!!!")
     shell.exiter()
 
 
@@ -283,6 +302,7 @@ def n():
     PAST_MENU.append(MENU.pop(0))
     return PAST_MENU[-1]()
 
+
 def p():
     """Previous element in the menu"""
     MENU.insert(0, PAST_MENU.pop())
@@ -301,24 +321,20 @@ for k in pystemd.systemd1.unit_signatures.KNOWN_UNIT_SIGNATURES:
 
 def ppcode(what):
     "pretty print some code"
-    filename = inspect.getsourcefile(what) 
+    filename = inspect.getsourcefile(what)
     lines = Path(inspect.getsourcefile(what)).read_text().splitlines()
     cmd, firstline = inspect.getsourcelines(what)
     lastline = firstline + len(cmd)
-    source = ''.join(cmd)
-    
+    source = "".join(cmd)
+
     _epp(f"# {filename}[{firstline}:{lastline}]\n\n{source}")
-    
+
 
 def demo():
     """
     Entry point for the pystemd shell, it just execute a few magic commands
     and starts a interactive shell
     """
-    if IPython.core.getipython.get_ipython() is None:
-        console = IPython.terminal.embed.InteractiveShellEmbed.instance()
-    else:
-        console = IPython.terminal.embed.InteractiveShellEmbed()
 
     clean_unit()
     shell.run_line_magic("autocall", "2")
@@ -326,14 +342,15 @@ def demo():
     shell.show_banner(display_banner)
     shell.mainloop()
 
+
 def daemon_demo_service(name="daemon-demo-service.service"):
     unit_clean(name)
     cmd = shlex.quote(subprocess.list2cmdline([sys.executable, *sys.argv]))
     extra = {
-        'TimeoutStartSec': 300,
-        'WatchdogSec': 299,
+        "TimeoutStartSec": 300,
+        "WatchdogSec": 299,
     }
-    env = {"UNIT_NAME" : name}
+    env = {"UNIT_NAME": name}
     _epd(
         f"""pystemd.run({cmd},
     service_type='notify',
@@ -346,21 +363,25 @@ def daemon_demo_service(name="daemon-demo-service.service"):
     )
     exit()
 
+
 ### pystemd.future libs
 def cpu_waste(timeout):
-    t0= time.time()
+    t0 = time.time()
     while time.time() - t0 < timeout:
-        2**64 -1
-    
-    return 2**64 -1
+        2**64 - 1
+
+    return 2**64 - 1
+
 
 def systemctl(text):
     subprocess.run(f"systemctl {text}", shell=True)
 
+
 def restart():
     os.execv(sys.executable, (sys.executable, *sys.argv))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print(os.getuid(), not os.getuid())
     if os.getuid():
         print("You shold run this as root, or you will have a bad time")

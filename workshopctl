@@ -10,9 +10,51 @@ import contextlib
 from tempfile import TemporaryDirectory
 from contextlib import ExitStack
 from datetime import datetime
+import urllib.request
+import tarfile
+
+DNF_PACKAGES = [
+    "",
+    "git",
+    "gcc",
+    "debootstrap",
+    "systemd-devel",
+    "systemd-container",
+    "mkosi",
+    "fakeroot",
+    "fakechroot",
+    "vim",
+    "tmux",
+    "links",
+    "nginx",
+    "strace",
+    "bcc-tools",
+    "bpftrace",
+    "python3-bcc",
+    "procps",
+    "passwd",
+    "lsof",
+    "xq",
+    "wireshark-cli",
+    "util-linux-user",
+    "iputils",
+    "htop",
+    "stress",
+    "bash-completion",
+    "python3-devel",
+    "python3-Cython",
+    "python3-wheel",
+    "python3-ipython",
+    "systemtap",
+    "systemtap-sdt-devel",
+    "python3-dnslib",
+    "python3-cachetools",
+    "readline-devel",
+]
 
 
 THIS_DIR = Path(__file__).absolute().resolve().parent
+BUILD_DIR = THIS_DIR / "build"
 VENV = THIS_DIR / "venv"
 PYTHON = VENV / "bin/python3"
 SUDO = "/usr/bin/sudo"
@@ -21,6 +63,12 @@ WORKSHOP = THIS_DIR / "workshop"
 
 DEFAULT_CONTAINER_BASE = "registry.fedoraproject.org/fedora:39"
 DEFAULT_CONTAINER_IMAGE_NAME = "localhost/systemd-workshop"
+
+# DEFAULT_VAGRANT_IMAGE = "fedora/39-cloud-base"
+DEFAULT_VAGRANT_IMAGE = "generic/fedora39"
+DEFAULT_VAGRANT_STAGE_0 = "fedora/39-base.box"
+DEFAULT_VAGRANT_STAGE_N_PREFIX = "fedora/37-workshop-"
+DEFAULT_VAGRANT_LAST = "fedora/37-last.box"
 
 
 def reexec(python=PYTHON, sudo=False):
@@ -149,9 +197,10 @@ class Container:
             "container",
             "run",
             "-d",
+            *("--network", "host"),
             "--privileged",
             *("-v", f"{THIS_DIR / 'workshop'}:/usr/local/src/workshop/workshop"),
-            #eBPF stuff
+            # eBPF stuff
             *("-v", "/sys/kernel/debug:/sys/kernel/debug"),
             *("-v", "/sys/kernel/tracing:/sys/kernel/tracing"),
             *("-v", "/sys/fs/cgroup:/sys/fs/cgroup"),
@@ -161,7 +210,10 @@ class Container:
                 "-v",
                 f"/usr/lib/modules/{kernel_version}/build:/usr/src/kernels/{kernel_version}:ro",
             ),
-            *("-v", f"/usr/lib/modules/{kernel_version}:/lib/modules/{kernel_version}:ro"),
+            *(
+                "-v",
+                f"/usr/lib/modules/{kernel_version}:/lib/modules/{kernel_version}:ro",
+            ),
             "--name",
             self.container_name,
             self.image_name,
@@ -231,43 +283,10 @@ def run(as_root: bool) -> None:
         "On macOS, is not necessary to run as root, because we run inside a vm."
     ),
 )
-@click.option("--run-after/--no-run-after",default=False)
+@click.option("--run-after/--no-run-after", default=False)
 def build(base, image_name, as_root, run_after):
     if as_root:
         asroot()
-
-    dnf_packages = [
-        "",
-        "git",
-        "gcc",
-        "debootstrap",
-        "systemd-devel",
-        "systemd-container",
-        "mkosi",
-        "fakeroot",
-        "fakechroot",
-        "vim",
-        "tmux",
-        "links",
-        "nginx",
-        "strace",
-        "bcc-tools",
-        "python3-bcc",
-        "procps",
-        "passwd",
-        "lsof",
-        "xq",
-        "wireshark-cli",
-        "util-linux-user",
-        "iputils",
-        "htop",
-        "stress",
-        "bash-completion",
-        "python3-devel",
-        "python3-Cython",
-        "python3-wheel",
-        "python3-ipython",
-    ]
 
     pip_packages = [
         "",
@@ -277,8 +296,16 @@ def build(base, image_name, as_root, run_after):
     CONTAINER_FILE_CONTENT = jinja2.Template(
         """
 FROM {{ base }}
-
-RUN dnf install -y {{ dnf_packages }} && dnf clean all
+RUN dnf list
+RUN dnf install -y gcc
+RUN dnf install -y systemtap-sdt-devel
+RUN dnf install -y readline-devel
+RUN dnf install -y openssl-devel
+RUN dnf install -y zlib-devel
+RUN dnf install -y libffi-devel
+RUN dnf install -y g++
+RUN dnf install -y libuuid-devel
+RUN dnf install -y {{ dnf_packages }}
 
 # install python
 RUN python3 -m pip install {{ pip_packages }}
@@ -286,8 +313,16 @@ RUN python3 -m pip install {{ pip_packages }}
 # change root password
 RUN echo workshop | passwd --stdin root
 
+# install a python compiled with dtrace
+# this should go to its own recipe, so we just pull a package
+
+ADD build/cpython/dist/py.tgz /opt/cpython/py.tgz
+RUN cd /opt/cpython/ && tar xzf py.tgz
+
+### END
+
 # add debian home
-RUN fakeroot debootstrap --include 'dbus,vim' unstable /opt/debian
+# RUN fakeroot debootstrap --include 'dbus,vim' unstable /opt/debian
 
 # create a few dirs
 RUN mkdir -p /usr/local/src/workshop
@@ -313,13 +348,15 @@ ENV WORKSHOP_DIR=/usr/local/src/workshop/workshop
 
 WORKDIR /usr/local/src/workshop
 
+RUN dnf clean all
+
 # starts systemd
 CMD [ "/usr/sbin/init" ]
 
         """
     ).render(
         base=base,
-        dnf_packages="\\\n  ".join(dnf_packages),
+        dnf_packages="\\\n  ".join(DNF_PACKAGES),
         pip_packages="\\\n  ".join(pip_packages),
         profile_d=[conf.relative_to(THIS_DIR) for conf in CONF_DIR.glob("profile.d/*")],
         selinux_config=(CONF_DIR / "workshop-selinux-config").relative_to(THIS_DIR),
@@ -338,7 +375,7 @@ CMD [ "/usr/sbin/init" ]
     )
 
     if run_after:
-        #TODO: replace this with just invoke run
+        # TODO: replace this with just invoke run
         with Container(f"{DEFAULT_CONTAINER_IMAGE_NAME}:latest") as c:
             try:
                 c.shell()
@@ -357,9 +394,24 @@ CMD [ "/usr/sbin/init" ]
 @click.option(
     "--build-stage", "-m", type=click.Choice(["0", "1", "n", "i", "l"]), default="n"
 )
-@click.option("--provision-script", type=Path, default=BIN_DIR / "provision-build")
-@click.option("--pre-provision-shell", is_flag=True, default=False)
-@click.option("--post-provision-shell", is_flag=True, default=False)
+@click.option(
+    "--provision-script",
+    type=Path,
+    default=BIN_DIR / "provision-build",
+    show_default=True,
+)
+@click.option(
+    "--pre-provision-shell",
+    is_flag=True,
+    default=False,
+    show_default=True,
+)
+@click.option(
+    "--post-provision-shell",
+    is_flag=True,
+    default=False,
+    show_default=True,
+)
 def build(
     build_dir,
     keep_vm,
@@ -369,38 +421,38 @@ def build(
     post_provision_shell,
 ):
     if build_stage == "0":
-        base_box = "fedora/37-cloud-base"
-        dest_box = BOX_DIR / "fedora/37-base.box"
+        base_box = DEFAULT_VAGRANT_IMAGE
+        dest_box = BOX_DIR / DEFAULT_VAGRANT_STAGE_0
         if dest_box.exists():
             raise FileExistsError("{dest_box} exists, please delete it or start from 1")
         alias_box = None
     elif build_stage == "1":
-        base_box = BOX_DIR / "fedora/37-base.box"
+        base_box = BOX_DIR / DEFAULT_VAGRANT_STAGE_0
         dest_box = (
             BOX_DIR
-            / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+            / f"{DEFAULT_VAGRANT_STAGE_N_PREFIX}{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
         )
-        alias_box = BOX_DIR / "fedora/37-last.box"
+        alias_box = BOX_DIR / DEFAULT_VAGRANT_LAST
     elif build_stage in ("n", "l"):
-        base_box = (BOX_DIR / "fedora/37-last.box").resolve()
+        base_box = (BOX_DIR / DEFAULT_VAGRANT_LAST).resolve()
         dest_box = (
             BOX_DIR
-            / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+            / f"{DEFAULT_VAGRANT_STAGE_N_PREFIX}{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
         )
-        alias_box = BOX_DIR / "fedora/37-last.box"
+        alias_box = BOX_DIR / DEFAULT_VAGRANT_LAST
     elif build_stage in "l":
-        base_box = (BOX_DIR / "fedora/37-last.box").resolve()
+        base_box = (BOX_DIR / DEFAULT_VAGRANT_LAST).resolve()
         dest_box = None
         alias_box = None
     elif build_stage == "i":
-        base_box = "aleivag/fedora37"
+        base_box = DEFAULT_VAGRANT_LAST
         dest_box = (
             BOX_DIR
-            / f"fedora/37-workshop-{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
+            / f"{DEFAULT_VAGRANT_STAGE_N_PREFIX}{datetime.today().strftime('%Y.%m.%d.%H%M')}.box"
         )
-        alias_box = BOX_DIR / "fedora/37-last.box"
+        alias_box = BOX_DIR / DEFAULT_VAGRANT_LAST
     elif build_stage == "c":
-        raise NotImplementedError("not implemented yet")
+        raise NotImplementedError("not implemented... yet!")
 
     with ExitStack() as estack:
         if not build_dir:
@@ -434,6 +486,115 @@ def build(
             if alias_box.exists():
                 alias_box.unlink()
             alias_box.symlink_to(dest_box.absolute())
+
+
+@main.command()
+@click.option("--build-root", default=BUILD_DIR / "cpython", type=Path)
+@click.option(
+    "--cpython-url",
+    default="https://www.python.org/ftp/python/3.12.2/Python-3.12.2.tgz",
+)
+def build_python(build_root: Path, cpython_url: str):
+    dist_dir = build_root / "dist"
+    container_dir = build_root / "container"
+    container_file = container_dir / "Containerfile"
+
+    build_script = build_root / "build-python"
+
+    build_root.mkdir(parents=True, exist_ok=True)
+    container_dir.mkdir(parents=True, exist_ok=True)
+    dist_dir.mkdir(parents=True, exist_ok=True)
+
+    CONTAINER_INSTALL_PREFIX = "/opt/cpython"
+    BASE_NAME = "localhost/python-build:latest"
+    container_file.write_text(
+        f"""
+FROM {DEFAULT_CONTAINER_BASE}
+
+ENV INSTALL_PREFIX={CONTAINER_INSTALL_PREFIX}
+
+RUN dnf list
+ADD {cpython_url} /usr/local/src/
+RUN cd /usr/local/src/ && tar xzf  *.tgz
+
+RUN dnf install -y gcc
+RUN dnf install -y systemtap-sdt-devel
+RUN dnf install -y readline-devel
+RUN dnf install -y openssl-devel
+RUN dnf install -y zlib-devel
+RUN dnf install -y libffi-devel
+RUN dnf install -y g++
+RUN dnf install -y libuuid-devel
+
+RUN cd /usr/local/src/Python-3.12.2 && \\
+    ./configure \\
+        --with-dtrace \\
+        --with-readline \\
+        --disable-shared \\
+        --enable-loadable-sqlite-extensions \\
+        --prefix $INSTALL_PREFIX 
+
+RUN cd /usr/local/src/Python-3.12.2 && make
+
+RUN cd /usr/local/src/Python-3.12.2 && make install
+RUN mkdir $INSTALL_PREFIX/logs
+RUN cp /usr/local/src/Python-3.12.2/configure.ac /usr/local/src/Python-3.12.2/config.log $INSTALL_PREFIX/logs
+        """
+    )
+
+    build_script.write_text(
+        """#!/bin/bash
+set -ex
+
+echo "hi! installing $PYTHON_SRC"
+
+ls /usr/local/src/
+cd $PYTHON_SRC
+make
+
+cd $INSTALL_PREFIX
+tar czf py.tgz *
+cp py.tgz $PYTHON_DIST
+
+    """
+    )
+    build_script.chmod(0o755)
+
+    subprocess.run(
+        ["podman", "build", *("--network", "host"), *("-t", BASE_NAME),"."],
+        cwd=container_dir,
+        text=True,
+        check=True,
+    )
+
+    subprocess.run(
+        [
+            "podman",
+            "run",
+            "--rm",
+            *("--network", "host"),
+            *("-v", f"{build_script}:/usr/local/bin/build-python"),
+            *("-v", f"{dist_dir}:/opt/dist"),
+            *("-e", "PYTHON_SRC=/usr/local/src/Python-3.12.2"),
+            # *("-e", "INSTALL_PREFIX=/opt/cpython"),
+            *("-e", "PYTHON_DIST=/opt/dist"),
+            BASE_NAME,
+            "/usr/local/bin/build-python",
+        ]
+    )
+
+
+@main.command()
+def lint():
+    subprocess.run(
+        [
+            "black",
+            ".",
+            THIS_DIR / "workshopctl",
+            THIS_DIR / "bin" / "pystemd-shell",
+            THIS_DIR / "bin" / "provision-host",
+        ]
+    )
 
 
 if __name__ == "__main__":

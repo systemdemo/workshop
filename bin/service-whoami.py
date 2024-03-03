@@ -10,8 +10,10 @@ import textwrap
 from shutil import which
 import time
 
+
 def _(t):
     return textwrap.indent(t, prefix=" ")
+
 
 MYPID = os.getpid()
 with pystemd.systemd1.Manager() as m:
@@ -37,16 +39,18 @@ print(
 print(
     "#######################################",
     "starting service whoami",
-    "runing as" ,
+    "runing as",
     _(f"Service Unit: {unit.Id.decode()}"),
     _(f"User: {getpass.getuser()}"),
     _(f"Extra: uid={os.getuid()} gid={os.getgid()}"),
     _(f"PID: {MYPID}"),
-    _(f"MAINPID: {unit.Service.ExecMainPID if unit.Id.decode().endswith('service') else '<no main pid>'}"),
+    _(
+        f"MAINPID: {unit.Service.ExecMainPID if unit.Id.decode().endswith('service') else '<no main pid>'}"
+    ),
     "",
     "Environmental variables:",
     _(pprint.pformat({**os.environ})),
-    sep="\n"
+    sep="\n",
 )
 
 

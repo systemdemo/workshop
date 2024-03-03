@@ -31,7 +31,7 @@ sudo dnf install -y \
         htop\
         stress\
         bash-completion\
-        python3-{devel,Cython,wheel,ipython}
+        python3-{devel,Cython,wheel,ipython,bcc}
 
 
 if [[ -e /usr/lib/systemd/system/vboxadd.service ]]; then

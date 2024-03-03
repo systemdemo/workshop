@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
-LOGGING_PREFIX= "#"*10
+
+LOGGING_PREFIX = "#" * 10
 
 print("MYFLAG")
 

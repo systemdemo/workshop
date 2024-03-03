@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-LOGGING_PREFIX= "#"*10
+LOGGING_PREFIX = "#" * 10
 
 print("MYFLAG")
 
@@ -11,7 +11,7 @@ print()
 
 print(f"{LOGGING_PREFIX}")
 print(f"{LOGGING_PREFIX} GOING TO open {filename}")
-file_= open(filename, "w")
+file_ = open(filename, "w")
 print()
 
 

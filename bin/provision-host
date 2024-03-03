@@ -57,8 +57,6 @@ for conf in CONF.glob("profile.d/*"):
 
     if dst_conf.exists():
         dst_conf.unlink()
-    
+
     print(f"{dst_conf} -> {conf}")
     dst_conf.symlink_to(conf)
-
-
