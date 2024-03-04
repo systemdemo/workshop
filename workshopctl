@@ -64,11 +64,11 @@ WORKSHOP = THIS_DIR / "workshop"
 DEFAULT_CONTAINER_BASE = "registry.fedoraproject.org/fedora:39"
 DEFAULT_CONTAINER_IMAGE_NAME = "localhost/systemd-workshop"
 
-# DEFAULT_VAGRANT_IMAGE = "fedora/39-cloud-base"
-DEFAULT_VAGRANT_IMAGE = "generic/fedora39"
+DEFAULT_VAGRANT_IMAGE = "fedora/39-cloud-base"
+# DEFAULT_VAGRANT_IMAGE = "generic/fedora39"
 DEFAULT_VAGRANT_STAGE_0 = "fedora/39-base.box"
-DEFAULT_VAGRANT_STAGE_N_PREFIX = "fedora/37-workshop-"
-DEFAULT_VAGRANT_LAST = "fedora/37-last.box"
+DEFAULT_VAGRANT_STAGE_N_PREFIX = "fedora/39-workshop-"
+DEFAULT_VAGRANT_LAST = "fedora/39-last.box"
 
 
 def reexec(python=PYTHON, sudo=False):
@@ -102,9 +102,11 @@ if not Path(sys.executable).samefile(PYTHON):
 try:
     import click
     import jinja2
+    import linode_api4
 except ImportError:
     subprocess.run(
-        [sys.executable, "-m", "pip", "install", "click", "jinja2"], check=True
+        [sys.executable, "-m", "pip", "install", "click", "jinja2", "linode_api4"],
+        check=True,
     )
     reexec()
 
@@ -170,13 +172,15 @@ end
 
 
 @click.group()
-def main():
-    ...
+def main(): ...
 
 
 @main.group()
-def container():
-    ...
+def container(): ...
+
+
+@main.group()
+def linode(): ...
 
 
 class Container:
@@ -561,7 +565,7 @@ cp py.tgz $PYTHON_DIST
     build_script.chmod(0o755)
 
     subprocess.run(
-        ["podman", "build", *("--network", "host"), *("-t", BASE_NAME),"."],
+        ["podman", "build", *("--network", "host"), *("-t", BASE_NAME), "."],
         cwd=container_dir,
         text=True,
         check=True,
@@ -595,6 +599,47 @@ def lint():
             THIS_DIR / "bin" / "provision-host",
         ]
     )
+
+
+@linode.command()
+def build():
+    client = linode_api4.LinodeClient(
+        (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
+    )
+
+    PROVISION_SCRIPT = """#!/bin/bash
+
+dnf install -y git
+git clone https://github.com/systemdemo/workshop /usr/local/src/workshop
+
+sh /usr/local/src/workshop/bin/provision-build
+/usr/local/src/workshop/bin/provision-host        
+"""
+    new_linode = client.linode.instance_create(
+        ltype="g6-nanode-1",
+        region="us-lax",
+        image="linode/fedora39",
+        label="scale-fedora39",
+        private_ip=False,
+        booted=True,
+        root_pass="systemd-SCaLE-2024",
+        backups_enabled=False,
+        metadata=client.linode.build_instance_metadata(user_data=PROVISION_SCRIPT),
+    )
+    print("Linode IP:", new_linode.ipv4[0])
+    # ssh into the host
+    subprocess.run(["ssh", f"root@{new_linode.ipv4[0]}", PROVISION_SCRIPT])
+    # now we should turn the machine off and create the image
+
+
+@linode.command()
+def kill():
+    client = linode_api4.LinodeClient(
+        (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
+    )
+
+    for instance in client.linode.instances():
+        instance.delete()
 
 
 if __name__ == "__main__":
