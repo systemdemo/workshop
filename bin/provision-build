@@ -149,7 +149,7 @@ EOF
 
 # compile python with dtrace support
 
-cpython_bin="/opt/cpython/bin/python"
+cpython_bin="/opt/cpython/bin/python3"
 
 if [ ! -f "$cpython_bin" ]; then
   if [ ! -f "/usr/local/src/Python-3.12.2" ]; then

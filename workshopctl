@@ -627,7 +627,9 @@ def lint():
 
 
 @linode.command()
-def build():
+@click.option("--from-image", default="linode/fedora39")
+@click.argument("build_label", default = LINODE_BUILD_LABEL)
+def build(from_image, build_label):
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
@@ -636,8 +638,8 @@ def build():
     new_linode = client.linode.instance_create(
         ltype="g6-nanode-1",
         region="us-lax",
-        image="linode/fedora39",
-        label=LINODE_BUILD_LABEL,
+        image=from_image,
+        label=build_label,
         private_ip=False,
         booted=True,
         root_pass="systemd-SCaLE-2024",
@@ -645,6 +647,14 @@ def build():
         metadata=client.linode.build_instance_metadata(user_data=PROVISION_SCRIPT),
     )
     print("Linode IP:", new_linode.ipv4[0])
+    print("provisioning instance")
+    while next(
+        client.linode.instances(linode_api4.Instance.label == build_label)
+    ).status == "provisioning":
+        sys.stdout.write(".")
+        sys.stdout.flush()
+        sleep(1)
+    print()
     # ssh into the host
     subprocess.run(
         [
