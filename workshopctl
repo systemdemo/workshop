@@ -617,6 +617,7 @@ git clone https://github.com/systemdemo/workshop /usr/local/src/workshop
 sh /usr/local/src/workshop/bin/provision-build
 /usr/local/src/workshop/bin/provision-host        
 """
+    PASSWORD = "systemd-SCaLE-2024"
     new_linode = client.linode.instance_create(
         ltype="g6-nanode-1",
         region="us-lax",
@@ -639,6 +640,7 @@ sh /usr/local/src/workshop/bin/provision-build
             f"root@{new_linode.ipv4[0]}",
             PROVISION_SCRIPT,
         ],
+        input=PASSWORD.encode() + b"\n",
         check=True,
     )
     disk = [*new_linode.disks][0]
@@ -668,6 +670,38 @@ def kill_machines():
 
     for instance in client.linode.instances():
         instance.delete()
+
+@linode.command()
+def list_images():
+    client = linode_api4.LinodeClient(
+        (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
+    )
+
+    for i in client.images():
+        if i.is_public: continue
+        print(f"{i.label=}, {i.id=}")
+
+@linode.command()
+@click.argument("image_id")
+@click.option("-n", default=1)
+@click.option("--name-prefix", default="scale-fedora39-")
+def deploy_images(image_id, n, name_prefix):
+    client = linode_api4.LinodeClient(
+        (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
+    )
+
+    new_linode = client.linode.instance_create(
+        ltype="g6-nanode-1",
+        region="us-lax",
+        image=image_id,
+        label=name_prefix + datetime.today().strftime("%Y.%m.%d.%H%M") + str(n),
+        private_ip=False,
+        booted=True,
+        root_pass="systemd-SCaLE-2024",
+        backups_enabled=False,
+        metadata=client.linode.build_instance_metadata(user_data=PROVISION_SCRIPT),
+    )
+    print("Linode IP:", new_linode.ipv4[0])
 
 
 if __name__ == "__main__":
