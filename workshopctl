@@ -12,6 +12,7 @@ from contextlib import ExitStack
 from datetime import datetime
 import urllib.request
 import tarfile
+from time import sleep
 
 DNF_PACKAGES = [
     "",
@@ -518,8 +519,7 @@ FROM {DEFAULT_CONTAINER_BASE}
 ENV INSTALL_PREFIX={CONTAINER_INSTALL_PREFIX}
 
 RUN dnf list
-ADD {cpython_url} /usr/local/src/
-RUN cd /usr/local/src/ && tar xzf  *.tgz
+ADD {cpython_url} cd /usr/local/src/ && tar xzf  *.tgz
 
 RUN dnf install -y gcc
 RUN dnf install -y systemtap-sdt-devel
@@ -609,6 +609,8 @@ def build():
 
     PROVISION_SCRIPT = """#!/bin/bash
 
+set -ex
+
 dnf install -y git
 git clone https://github.com/systemdemo/workshop /usr/local/src/workshop
 
@@ -628,12 +630,38 @@ sh /usr/local/src/workshop/bin/provision-build
     )
     print("Linode IP:", new_linode.ipv4[0])
     # ssh into the host
-    subprocess.run(["ssh", f"root@{new_linode.ipv4[0]}", PROVISION_SCRIPT])
+    subprocess.run(
+        [
+            "ssh",
+            *("-o", "StrictHostKeyChecking=no"),
+            *("-o", "PasswordAuthentication=yes"),
+            *("-o", "PubkeyAuthentication=no"),
+            f"root@{new_linode.ipv4[0]}",
+            PROVISION_SCRIPT,
+        ],
+        check=True,
+    )
+    disk = [*new_linode.disks][0]
+    image_label = "scale_2024_" + datetime.today().strftime("%Y.%m.%d.%H%M")
+    # maybe add some tags
+    new_image = client.images.create(disk, label=image_label)
+
+    while (
+        new_image := next(client.images(linode_api4.Image.label == new_image.label))
+    ).status != "creating":
+        print("still creating...")
+        sleep(1)
+    print(f"new image {new_image.label} has status {new_image.status}")
+
     # now we should turn the machine off and create the image
 
 
 @linode.command()
-def kill():
+def kill_machines():
+    """
+    Destroy all runing instances
+    :return:
+    """
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )

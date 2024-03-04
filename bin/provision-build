@@ -13,25 +13,42 @@ PYSTEMD_SRC="/opt/pystemd"
 PYSTEMD_REPO="https://github.com/systemd/pystemd"
 
 sudo mkdir -p "$DEBIAN_ROOT" "$PYSTEMD_SRC"
-sudo dnf install -y \
-        git\
-        gcc\
-        libX{11,t,ext,mu}\
-        debootstrap\
-        systemd-devel\
-        mkosi\
-        vim\
-        tmux\
-        links\
-        nginx\
-        strace\
-        lsof\
-        xq\
-        wireshark-cli\
-        htop\
-        stress\
-        bash-completion\
-        python3-{devel,Cython,wheel,ipython,bcc}
+sudo dnf install -y git\
+    gcc\
+    debootstrap\
+    systemd-devel\
+    systemd-container\
+    mkosi\
+    fakeroot\
+    fakechroot\
+    vim\
+    tmux\
+    links\
+    nginx\
+    strace\
+    bcc-tools\
+    bpftrace\
+    python3-bcc\
+    procps\
+    passwd\
+    lsof\
+    xq\
+    wireshark-cli\
+    util-linux-user\
+    iputils\
+    htop\
+    stress\
+    bash-completion\
+    python3-devel\
+    python3-Cython\
+    python3-wheel\
+    python3-ipython\
+    systemtap\
+    systemtap-sdt-devel\
+    python3-dnslib\
+    python3-cachetools\
+    readline-devel
+
 
 
 if [[ -e /usr/lib/systemd/system/vboxadd.service ]]; then
@@ -123,12 +140,34 @@ if [[ -e "/usr/local/src/workshop" ]]; then
 fi
 EOF
 
+# compile python with dtrace support
+
+dnf install -y libuuid-devel
+dnf install -y gcc
+dnf install -y systemtap-sdt-devel
+dnf install -y readline-devel
+dnf install -y openssl-devel
+dnf install -y zlib-devel
+dnf install -y libffi-devel
+dnf install -y g++
+
+wget https://www.python.org/ftp/python/3.12.2/Python-3.12.2.tgz -O /usr/local/src/Python-3.12.2.tgz
+cd /usr/local/src/ && tar xzf  Python-3.12.2.tgz
+cd /usr/local/src/Python-3.12.2 && \\
+    ./configure \\
+        --with-dtrace \\
+        --with-readline \\
+        --disable-shared \\
+        --enable-loadable-sqlite-extensions \\
+        --prefix /opt/cpython
+
+make
+make install
+
+
 # cleanup root 
 sudo dnf clean all 
 sudo rm -f  /home/*/.bash_history /root/.bash_history
 sudo rm -rf  /var/log/*
+sudo rm -rf /usr/local/src/Python-3.12.2.tgz /usr/local/src/Python-3.12.2
 
-
-
-# sudo dd if=/dev/zero of=/EMPTY bs=1M || /bin/true
-# rm -f /EMPTY
