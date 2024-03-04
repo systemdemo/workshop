@@ -47,8 +47,15 @@ sudo dnf install -y git\
     systemtap-sdt-devel\
     python3-dnslib\
     python3-cachetools\
-    readline-devel
-
+    readline-devel \
+    libuuid-devel \
+    gcc \
+    systemtap-sdt-devel \
+    readline-devel \
+    openssl-devel \
+    zlib-devel \
+    libffi-devel \
+    g++
 
 
 if [[ -e /usr/lib/systemd/system/vboxadd.service ]]; then
@@ -142,29 +149,24 @@ EOF
 
 # compile python with dtrace support
 
-dnf install -y libuuid-devel
-dnf install -y gcc
-dnf install -y systemtap-sdt-devel
-dnf install -y readline-devel
-dnf install -y openssl-devel
-dnf install -y zlib-devel
-dnf install -y libffi-devel
-dnf install -y g++
+cpython_bin="/opt/cpython/bin/python"
 
-wget https://www.python.org/ftp/python/3.12.2/Python-3.12.2.tgz -O /usr/local/src/Python-3.12.2.tgz
-cd /usr/local/src/ && tar xzf  Python-3.12.2.tgz
-cd /usr/local/src/Python-3.12.2 && \\
-    ./configure \\
-        --with-dtrace \\
-        --with-readline \\
-        --disable-shared \\
-        --enable-loadable-sqlite-extensions \\
-        --prefix /opt/cpython
+if [ ! -f "$cpython_bin" ]; then
+  if [ ! -f "/usr/local/src/Python-3.12.2" ]; then
+    wget https://www.python.org/ftp/python/3.12.2/Python-3.12.2.tgz -O /usr/local/src/Python-3.12.2.tgz
+    cd /usr/local/src/ && tar xzf  Python-3.12.2.tgz
+  fi
 
-make
-make install
-
-
+  cd /usr/local/src/Python-3.12.2
+  ./configure \
+      --with-dtrace \
+      --with-readline \
+      --disable-shared \
+      --enable-loadable-sqlite-extensions \
+      --prefix /opt/cpython
+  make
+  make install
+fi
 # cleanup root 
 sudo dnf clean all 
 sudo rm -f  /home/*/.bash_history /root/.bash_history

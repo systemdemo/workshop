@@ -53,6 +53,30 @@ DNF_PACKAGES = [
     "readline-devel",
 ]
 
+PROVISION_SCRIPT = """#!/bin/bash
+
+set -ex
+
+dnf install -y git
+
+# Define the directory path
+workshop_dir="/usr/local/src/workshop"
+
+# Check if the directory exists
+if [ -d "$workshop_dir" ]; then
+    # If the directory exists, perform git pull
+    cd "$workshop_dir" || exit 1
+    git pull origin main
+else
+    # If the directory doesn't exist, perform git clone
+    git clone https://github.com/systemdemo/workshop "$workshop_dir"
+fi
+
+sh $workshop_dir/bin/provision-build
+$workshop_dir/bin/provision-host 
+"""
+
+LINODE_BUILD_LABEL = "scale-fedora39"
 
 THIS_DIR = Path(__file__).absolute().resolve().parent
 BUILD_DIR = THIS_DIR / "build"
@@ -607,22 +631,13 @@ def build():
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
 
-    PROVISION_SCRIPT = """#!/bin/bash
 
-set -ex
-
-dnf install -y git
-git clone https://github.com/systemdemo/workshop /usr/local/src/workshop
-
-sh /usr/local/src/workshop/bin/provision-build
-/usr/local/src/workshop/bin/provision-host        
-"""
     PASSWORD = "systemd-SCaLE-2024"
     new_linode = client.linode.instance_create(
         ltype="g6-nanode-1",
         region="us-lax",
         image="linode/fedora39",
-        label="scale-fedora39",
+        label=LINODE_BUILD_LABEL,
         private_ip=False,
         booted=True,
         root_pass="systemd-SCaLE-2024",
@@ -656,6 +671,28 @@ sh /usr/local/src/workshop/bin/provision-build
     print(f"new image {new_image.label} has status {new_image.status}")
 
     # now we should turn the machine off and create the image
+
+@linode.command()
+def provision():
+    PASSWORD = "systemd-SCaLE-2024"
+    client = linode_api4.LinodeClient(
+        (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
+    )
+
+    new_linode = next(client.images(linode_api4.Image.label == LINODE_BUILD_LABEL))
+
+    subprocess.run(
+        [
+            "ssh",
+            *("-o", "StrictHostKeyChecking=no"),
+            *("-o", "PasswordAuthentication=yes"),
+            *("-o", "PubkeyAuthentication=no"),
+            f"root@{new_linode.ipv4[0]}",
+            PROVISION_SCRIPT,
+        ],
+        input=PASSWORD.encode() + b"\n",
+        check=True,
+    )
 
 
 @linode.command()
