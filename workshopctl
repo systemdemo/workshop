@@ -13,6 +13,7 @@ from datetime import datetime
 import urllib.request
 import tarfile
 from time import sleep
+from concurrent.futures import ThreadPoolExecutor
 
 DNF_PACKAGES = [
     "",
@@ -631,7 +632,6 @@ def build():
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
 
-
     PASSWORD = "systemd-SCaLE-2024"
     new_linode = client.linode.instance_create(
         ltype="g6-nanode-1",
@@ -648,14 +648,13 @@ def build():
     # ssh into the host
     subprocess.run(
         [
-            "ssh",
+            *("sshpass", "-p", PASSWORD, "ssh"),
             *("-o", "StrictHostKeyChecking=no"),
             *("-o", "PasswordAuthentication=yes"),
             *("-o", "PubkeyAuthentication=no"),
             f"root@{new_linode.ipv4[0]}",
             PROVISION_SCRIPT,
         ],
-        input=PASSWORD.encode() + b"\n",
         check=True,
     )
     disk = [*new_linode.disks][0]
@@ -665,12 +664,13 @@ def build():
 
     while (
         new_image := next(client.images(linode_api4.Image.label == new_image.label))
-    ).status != "creating":
+    ).status == "creating":
         print("still creating...")
         sleep(1)
     print(f"new image {new_image.label} has status {new_image.status}")
 
     # now we should turn the machine off and create the image
+
 
 @linode.command()
 def provision():
@@ -679,7 +679,9 @@ def provision():
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
 
-    new_linode = next(client.images(linode_api4.Image.label == LINODE_BUILD_LABEL))
+    new_linode = next(
+        client.linode.instances(linode_api4.Instance.label == "scale-fedora39")
+    )
 
     subprocess.run(
         [
@@ -690,9 +692,55 @@ def provision():
             f"root@{new_linode.ipv4[0]}",
             PROVISION_SCRIPT,
         ],
-        input=PASSWORD.encode() + b"\n",
         check=True,
     )
+
+
+@linode.command()
+@click.argument("host_label", default="scale-fedora39")
+def ssh(host_label):
+    PASSWORD = "systemd-SCaLE-2024"
+    client = linode_api4.LinodeClient(
+        (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
+    )
+
+    new_linode = next(client.linode.instances(linode_api4.Instance.label == host_label))
+
+    # print("password is:", PASSWORD)
+    subprocess.run(
+        [
+            *("sshpass", "-p", PASSWORD, "ssh"),
+            *("-o", "StrictHostKeyChecking=no"),
+            *("-o", "PasswordAuthentication=yes"),
+            *("-o", "PubkeyAuthentication=no"),
+            f"root@{new_linode.ipv4[0]}",
+        ],
+        # input=PASSWORD.encode() + b"\n",
+        check=True,
+    )
+
+
+@linode.command()
+@click.argument("host_label", default="scale-fedora39")
+def create_image(host_label):
+    client = linode_api4.LinodeClient(
+        (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
+    )
+
+    new_linode = next(
+        client.linode.instances(linode_api4.Instance.label == host_label)
+    )
+    disk = [*new_linode.disks][0]
+    image_label = "scale_2024_" + datetime.today().strftime("%Y.%m.%d.%H%M")
+    # maybe add some tags
+    new_image = client.images.create(disk, label=image_label)
+
+    while (
+        new_image := next(client.images(linode_api4.Image.label == new_image.label))
+    ).status == "creating":
+        print("still creating...")
+        sleep(1)
+    print(f"new image {new_image.label} has status {new_image.status}")
 
 
 @linode.command()
@@ -709,14 +757,25 @@ def kill_machines():
         instance.delete()
 
 @linode.command()
+@click.argument("host_label", required=True)
+def kill(host_label):
+    client = linode_api4.LinodeClient(
+        (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
+    )
+
+    next(client.linode.instances(linode_api4.Instance.label == host_label)).delete()
+
+@linode.command()
 def list_images():
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
 
     for i in client.images():
-        if i.is_public: continue
+        if i.is_public:
+            continue
         print(f"{i.label=}, {i.id=}")
+
 
 @linode.command()
 @click.argument("image_id")
@@ -726,19 +785,29 @@ def deploy_images(image_id, n, name_prefix):
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
-
-    new_linode = client.linode.instance_create(
-        ltype="g6-nanode-1",
-        region="us-lax",
-        image=image_id,
-        label=name_prefix + datetime.today().strftime("%Y.%m.%d.%H%M") + str(n),
-        private_ip=False,
-        booted=True,
-        root_pass="systemd-SCaLE-2024",
-        backups_enabled=False,
-        metadata=client.linode.build_instance_metadata(user_data=PROVISION_SCRIPT),
-    )
-    print("Linode IP:", new_linode.ipv4[0])
+    with ThreadPoolExecutor() as executor:
+        new_linodes = [
+            executor.submit(
+                client.linode.instance_create,
+                ltype="g6-nanode-1",
+                region="us-lax",
+                image=image_id,
+                label=(
+                    name_prefix
+                    + datetime.today().strftime("%Y.%m.%d.%H%M")
+                    + "-"
+                    + str(size)
+                ),
+                private_ip=False,
+                booted=True,
+                root_pass="systemd-SCaLE-2024",
+                backups_enabled=False,
+            )
+            for size in range(n)
+        ]
+    for new_linode_future in new_linodes:
+        new_linode = new_linode_future.result()
+        print(f"Linode {new_linode.label} IP:{new_linode.ipv4[0]}")
 
 
 if __name__ == "__main__":

@@ -67,7 +67,7 @@ sudo systemctl disable auditd.service
 sudo systemctl reset-failed
 
 
-#test -e ${DEBIAN_ROOT}/etc/os-release || sudo debootstrap --include 'dbus,vim' unstable "$DEBIAN_ROOT"
+test -e ${DEBIAN_ROOT}/etc/os-release || sudo debootstrap --include 'dbus,vim' stable "$DEBIAN_ROOT"
 test -e ${PYSTEMD_SRC}/setup.py || sudo git clone $PYSTEMD_REPO $PYSTEMD_SRC
 
 # create pystemd wheel and install it in root dist
