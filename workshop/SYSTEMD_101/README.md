@@ -1,6 +1,5 @@
 # Systemd 101
 
-
 ## Create your first unit
 
 In this section we will get started with systemd. This will be our first try at working with systemd. If you have used systemd before, some of these things will look and feel familiar. But we need to walk before we can run, right?
@@ -12,14 +11,14 @@ To create your first systemd unit, you can save the contents to a file with a .s
 Description=My first systemd service
 
 [Service]
-ExecStart=/opt/bin/service-whoami.py
+ExecStart=/usr/local/src/workshop/bin/service-whoami.py
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-This unit file assumes that you have a Python script located at `/opt/bin/service-whoami.py` (we already put it there for you).
+This unit file assumes that you have a Python script located at `/usr/local/src/workshop/bin/service-whoami.py` (we already put it there for you).
 
 The `[Unit]` section consists of a `Description=` property which describes the unit. The `[Service]` section has an `ExecStart=` property specifies the command to run when starting the service, and the `Restart=` property which specifies that the service should be automatically restarted if it crashes or exits for any reason. The `[Install]` section has a `WantedBy=` property which specifies that the service should be started as part of the `multi-user.target` unit, which is one of the default system states that systemd can bring the system into.
 
@@ -100,9 +99,9 @@ Modify the original service file located in /etc/systemd/system/myfirstservice.s
 Description=My first systemd service
 
 [Service]
-ExecStart=/usr/bin/python /opt/bin/service-whoami.py
+ExecStart=/usr/bin/python /usr/local/src/workshop/bin/service-whoami.py
 Restart=always
-User=vagrant
+User=nobody
 
 [Install]
 WantedBy=multi-user.target
@@ -134,7 +133,7 @@ There is not much new in `status` that would indicate the unit is being run as a
 First, before we look for the output from the unit's `ExecStart=` command, let's execute the command in the terminal:
 
 ```
-[~] /opt/bin/service-whoami.py
+[~] /usr/local/src/workshop/bin/service-whoami.py
 ```
 
 You see 3 sections:
@@ -266,6 +265,7 @@ Will show the status of the service that’s running the process 9178.
 
 > Exercise: If every process (with a PID) on your machine is running under a systemd unit, what's the unit for PID 1?
 
+> run systemctl status with no pid... what happens?
 ---
 
 ### systemctl cat
@@ -388,6 +388,9 @@ Feb 15 05:35:29 systemd[1]: myfirstservice.service: Scheduled restart job, resta
 
 The difference between `kill` and `stop`, is that when executing `systemctl stop myfirstservice.service`, systemd will not honor the `Restart=` option on the unit (so the unit remains stopped). This is because systemd runs through an internal state machine to stop the unit. Running `kill` just sends a signal and has no effect on the internal systemd state machine.
 
+### systemctl list-units
+
+run it!!!
 
 # Using systemd-run to run transient (ad-hoc / ephemeral) services
 

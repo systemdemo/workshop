@@ -1,5 +1,7 @@
 # Getting Started
 
+The slides are here: https://docs.google.com/presentation/d/1tLomGSIBcfS2FI-3QyDoPBqM_RTcT4KsVJB0y5nVkrc/edit#slide=id.g1fd3f2d1519_0_0
+
 ## Initial Steps
 
 To get started with the workshop, you will need a Linux operating system that uses systemd as its default init system. You can use any Linux distribution that uses systemd, such as Ubuntu, Debian, Fedora, CentOS, or Arch Linux. We provide (and recommend using) a Vagrant + Virtual Box setup, that will allow you to run this workshop in not only Linux, but also MacOS and Windows.
