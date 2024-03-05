@@ -169,11 +169,15 @@ if [ ! -f "$cpython_bin" ]; then
 fi
 
 # this hack over here is for linode's weird kernel
+# but i should probably fix this
 kernel_version=$(uname -r)
 build_dir="/usr/lib/modules/${kernel_version}/build"
-if [ ! -d "$build_dir" ]; then
-  highest_dir=$(ls -t /usr/src/kernels/ | head -1)
-  ln -s "/usr/src/kernels/${highest_dir}" "$build_dir"
+if [ -d $build_dir ] && [ -z "$(ls -A ${build_dir})" ]; then
+    rm -rf "${build_dir}"
+fi
+if [ ! -e "${build_dir}/vmlinux.h" ]; then
+  highest_dir=$(find /usr/src/kernels/* -type f -name vmlinux.h -exec dirname {} \; | sort -r | head -n 1)
+  ln -s "$highest_dir" "$build_dir"
 fi
 
 # cleanup root 
