@@ -167,6 +167,15 @@ if [ ! -f "$cpython_bin" ]; then
   make
   make install
 fi
+
+# this hack over here is for linode's weird kernel
+kernel_version=$(uname -r)
+build_dir="/usr/lib/modules/${kernel_version}/build"
+if [ ! -d "$build_dir" ]; then
+  highest_dir=$(ls -t /usr/src/kernels/ | head -1)
+  ln -s "/usr/src/kernels/${highest_dir}" "$build_dir"
+fi
+
 # cleanup root 
 sudo dnf clean all 
 sudo rm -f  /home/*/.bash_history /root/.bash_history

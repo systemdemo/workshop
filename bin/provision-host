@@ -30,7 +30,7 @@ if BASHRC_LOCAL.exists():
 
 if SELINUX_CONFIG.exists():
     pathlib.Path("/etc/selinux/config").write_text(SELINUX_CONFIG.read_text())
-    subprocess.run(["setenforce", "Permissive"], check=True)
+    subprocess.run(["setenforce", "Permissive"])
 
 for unit in WORKSHOP.glob("**/systemd.units/*"):
     dst = SYSTEMD_CONF / unit.name

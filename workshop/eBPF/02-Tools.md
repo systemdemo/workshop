@@ -368,10 +368,22 @@ from [introduction-bpftrace](https://opensource.com/article/19/8/introduction-bp
 * [ftrace](https://en.wikipedia.org/wiki/Ftrace): ftrace (Function Tracer) is a tracing framework for the Linux kernel. Although its original name, Function Tracer, came from ftrace's ability to record information related to various function calls performed while the kernel is running, ftrace's tracing capabilities cover a much broader range of kernel's internal operations.
 * [SystemTap](https://en.wikipedia.org/wiki/SystemTap): Is a scripting language and tool for dynamically instrumenting running production Linux-based operating systems.
 
-
 # Userspace Probes
 
-We cant have the kernel have all the fun. Thj
+We can't let the kernel have all the fun. For this Userspace Probes, also known as USDT (Userspace Statically Defined Tracing) or uprobes, exists.
+They are a type of dynamic tracing tool that allows developers to insert trace points into running processes without modifying the 
+kernel or recompiling the application. This makes them useful for debugging and profiling applications in production environments. 
+
+The caveat is that application must be compiled with support for this, and they do come with "some" performance cost, 
+let's explore some very simple: 
+
+## Python Probes USDT
+
+"system python" (a.k.a as teh python that comes with your machine) does not come with uprobes, but in this workshop we
+provide a python interpreter compiled with some support, you can see the [--with-dtrace](https://github.com/systemdemo/workshop/blob/main/bin/provision-build#L161-L166)
+on python ./configure
+
+to know if a binary ahs uprobes, you can 
 
 ```commandline
 [root@aleivag-fedora-PC1C0JVZ workshop]# /usr/share/bcc/tools/tplist -l /opt/cpython/bin/python3.12
@@ -380,20 +392,25 @@ We cant have the kernel have all the fun. Thj
 /opt/cpython/bin/python3.12 python:audit
 /opt/cpython/bin/python3.12 python:gc__start
 /opt/cpython/bin/python3.12 python:gc__done
-
 ```
 
+Check id /usr/bin/python has any?.  how about /usr/bin/qemu-system-x86_64?
+
+To explore this, probes, lets start a python interpreter on another terminal
+
+
 ```commandline
-[root@aleivag-fedora-PC1C0JVZ workshop]# /opt/cpython/bin/python3.12
+# /opt/cpython/bin/python3.12
 Python 3.12.2 (tags/v3.12.2:6abddd9f6a, Feb 29 2024, 01:33:51) [GCC 13.2.1 20231205 (Red Hat 13.2.1-6)] on linux
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import os           
 >>> os.getpid()
 353
 ```
+now lets hook to this probes, both bcc and bpftrace has support for this, so lets  test both:
 
 ```commandline
-/usr/share/bcc/tools/trace 'u:/opt/cpython/bin/python3.12:audit %s, arg1' -p 353
+/usr/share/bcc/tools/trace 'u:/opt/cpython/bin/python3.12:audit "%s", arg1' -p 353
 ```
 
 

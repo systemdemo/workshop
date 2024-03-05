@@ -630,6 +630,10 @@ def lint():
 @click.option("--from-image", default="linode/fedora39")
 @click.argument("build_label", default = LINODE_BUILD_LABEL)
 def build(from_image, build_label):
+    """
+    Build the initial the base image from runing the provision script. script must be check in in github
+    (no local development yet)
+    """
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
@@ -644,7 +648,6 @@ def build(from_image, build_label):
         booted=True,
         root_pass="systemd-SCaLE-2024",
         backups_enabled=False,
-        metadata=client.linode.build_instance_metadata(user_data=PROVISION_SCRIPT),
     )
     print("Linode IP:", new_linode.ipv4[0])
     print("provisioning instance")
@@ -683,19 +686,24 @@ def build(from_image, build_label):
 
 
 @linode.command()
-def provision():
+@click.argument("host_label", default = LINODE_BUILD_LABEL)
+def provision(host_label):
+    """
+    Provision a host, the host mjst be alerady runing
+
+    """
     PASSWORD = "systemd-SCaLE-2024"
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
 
     new_linode = next(
-        client.linode.instances(linode_api4.Instance.label == "scale-fedora39")
+        client.linode.instances(linode_api4.Instance.label == host_label)
     )
 
     subprocess.run(
         [
-            "ssh",
+            *("sshpass", "-p", PASSWORD, "ssh"),
             *("-o", "StrictHostKeyChecking=no"),
             *("-o", "PasswordAuthentication=yes"),
             *("-o", "PubkeyAuthentication=no"),
@@ -707,8 +715,9 @@ def provision():
 
 
 @linode.command()
-@click.argument("host_label", default="scale-fedora39")
+@click.argument("host_label", default=LINODE_BUILD_LABEL)
 def ssh(host_label):
+    "ssh into a host"
     PASSWORD = "systemd-SCaLE-2024"
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
@@ -729,10 +738,10 @@ def ssh(host_label):
         check=True,
     )
 
-
 @linode.command()
 @click.argument("host_label", default="scale-fedora39")
 def create_image(host_label):
+    "from a host, create an image"
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
@@ -756,8 +765,7 @@ def create_image(host_label):
 @linode.command()
 def kill_machines():
     """
-    Destroy all runing instances
-    :return:
+    Destroy all machines
     """
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
@@ -769,6 +777,7 @@ def kill_machines():
 @linode.command()
 @click.argument("host_label", required=True)
 def kill(host_label):
+    "kill a single machine"
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
@@ -777,6 +786,7 @@ def kill(host_label):
 
 @linode.command()
 def list_images():
+    "list all the runing images"
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
@@ -791,7 +801,8 @@ def list_images():
 @click.argument("image_id")
 @click.option("-n", default=1)
 @click.option("--name-prefix", default="scale-fedora39-")
-def deploy_images(image_id, n, name_prefix):
+def deploy_image(image_id, n, name_prefix):
+    "starts n machines"
     client = linode_api4.LinodeClient(
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
