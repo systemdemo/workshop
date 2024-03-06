@@ -30,7 +30,7 @@ You see a few things happening here:
 3. We execute something at the beginning with the `BEGIN` block, causing the app to freeze.
 4. We exit with `^C`, and bpftrace prints the variable we created, which is still in memory.
 
-Now let's do some more interesting things. Let's track all processes created by adding the following code (check 02-openfiles.bt for the full file):
+Now let's do some more interesting things. Let's track all processes created by adding the following code (check [02-openfiles.bt](samples/02-openfiles.bt) for the full file):
 ```csharp
 tracepoint:syscalls:sys_exit_clone /@exectree[pid]/ {
     if (args.ret > 0){
@@ -76,7 +76,7 @@ You can see that we can track clone, and a few important things here are:
 4. Clone can return zero; in that case, this is the child process. We just log it to show, but we will discard it later.
 5. With `ctl+^c`, you can see that we keep the values of these children in memory.
 
-Clean up children when they exit, see 03-openfiles.bt:
+Clean up children when they exit, see [03-openfiles.bt](samples/03-openfiles.bt):
 
 ```css
 tracepoint:syscalls:sys_enter_exit_group /@exectree[pid]/ {
@@ -84,7 +84,7 @@ tracepoint:syscalls:sys_enter_exit_group /@exectree[pid]/ {
 }
 ```
 
-Now let's keep track of open files, similar to what we did before (see 04-openfiles.bt):
+Now let's keep track of open files, similar to what we did before (see [04-openfiles.bt](samples/04-openfiles.bt)):
 ```csharp
 tracepoint:syscalls:sys_enter_openat /@exectree[pid]/{
     @filename[tid] = args.filename;
@@ -130,7 +130,7 @@ Now it's working... The relevant sections that we have not covered before are:
 3. Then we attach to the exit event of open with `tracepoint:syscalls:sys_exit_openat`, but only for threads that have open files `/@filename[tid]/`.
 4. If the return value is greater than zero, it means the open succeeded, so we print the file and remove it from the map.
 
-Finally, let's clean up and put all together:
+Finally, let's clean up and put all together in [openfiles.bt](samples/openfiles.bt):
 ```csharp
 #!/usr/bin/env bpftrace
 BEGIN {
