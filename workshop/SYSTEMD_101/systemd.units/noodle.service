@@ -1,0 +1,5 @@
+[Service]
+ExecStart=/bin/echo "very noodley end"
+
+[Install]
+WantedBy=pasta.target

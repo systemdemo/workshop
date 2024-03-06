@@ -5,8 +5,8 @@
 
 1. [Getting Started With This Workshop](GETTING_STARTED/README.md)
 1. [systemd 101](SYSTEMD_101/README.md)
-1. [Timers and other unit types](SYSTEMD_101/other-units-types.md)
-2. [Dependencies and More](SERVICES/dependencies.md)
+1. [Other unit types](SYSTEMD_101/other-units-types.md)
+2. [Dependencies and More](SYSTEMD_101/dependencies.md)
 6. [Sandboxing](SANDBOXING/README.md)
 5. [Journald](JOURNAL_101/README.md)
 7. [Deep Dive Into Services](SERVICES/README.md)

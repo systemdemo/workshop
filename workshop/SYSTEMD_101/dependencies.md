@@ -1,4 +1,4 @@
-# Dependencies
+# Dependencies and More
 
 ## Why Do Ordering and Dependencies Matter?
 
@@ -164,6 +164,80 @@ Add the `[Install]` contents from above to the 2 units and enable the units:
 ```
 
 You will see that 2 symlinks were created. Now reboot, SSH back in, and notice the units ran!
+
+## Synchronization
+
+Based on the dependency chart for units, systemd can parallelize the bootup process as much as possible. And on shutdown, it also uses the same information to stop units in the reverse order they started. The man page for bootup has a great chart on how to visualize this:
+
+```
+[~] man bootup
+```
+
+You'll notice that the bootup chart consists of multiple target units. Services are further associated with a target like in the examples above. you can read about each of these targets in detail in the systemd.special man page.
+
+Target units are used to set synchronization points for ordering dependencies with other unit files. You can think of targets as similar to runlevels in traditional SysVinit systems, but with more flexibility and granularity. Unlike other unit types, there is no special `[Target]` section for configuring a target unit, only the `[Unit]` section.
+
+The default boot target is decided by what `/etc/systemd/system/default.target` is symlinked to. Check what target it is with:
+```
+[~] systemctl get-default
+```
+This is the same as checking the symlink for default.target.
+
+## Creating a custom boot target
+We've included a simple unit called pasta.target and its contents:
+```
+[~] systemctl cat pasta.target
+# /etc/systemd/system/pasta.target
+[Unit]
+Description=My Very Pasta Target
+Requires=multi-user.target
+Conflicts=rescue.service rescue.target
+After=multi-user.target rescue.service rescue.target
+AllowIsolate=yes
+```
+multi-user.target is a special target unit for setting up a non-graphical multi-user system. Since pasta.target requires and runs after multi-user.target we can use it as a boot target. Let's set pasta.target as our default boot target:
+```
+[~] systemctl set-default pasta.target
+```
+
+If you get a `Failed to set default target: Refusing to operate on alias name or linked unit file: pasta.target` error, then it may be because pasta.target is a symlink rather than a file. Remove the symlink and copy over the actual file in its place. Then try again.
+
+Remember that you can associate a service to this target in order to start the unit at that boot point. We've provided a simple one for you:
+```
+[~] systemctl cat noodle.service
+# /etc/systemd/system/noodle.service
+[Service]
+ExecStart=/bin/echo "very noodley end"
+
+[Install]
+WantedBy=pasta.target
+```
+
+Now enable it (remember that unless you do this, the service will not start with the target):
+```
+[~] systemctl enable noodle.service
+```
+
+Reboot the machine:
+s
+```
+[~] systemctl reboot
+```
+When you SSH back in you can examine the new boot state. You can use the following to examine the target order and when each one became active:
+```
+[~] systemd-analyze critical-chain
+```
+You can also use the timestamp values as in the previous examples to confirm that noodle.service and boot.target did indeed start after multi-user.target.
+
+Some other fun commands to get a visual view of dependencies and systemd initialization:
+```
+# This one creates a dependency graph for a unit in dot format.
+[~] systemd-analyze dot <unit name>
+
+# This one outputs and SVG of the initialization sequence.
+[~] systemd-analyze critical-chain
+```
+
 
 ---
 [back to TOC](https://github.com/systemdemo/workshop/blob/main/workshop/README.md)

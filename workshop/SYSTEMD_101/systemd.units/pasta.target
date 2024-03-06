@@ -1,0 +1,6 @@
+[Unit]
+Description=My Very Pasta Target
+Requires=multi-user.target
+Conflicts=rescue.service rescue.target
+After=multi-user.target rescue.service rescue.target
+AllowIsolate=yes
