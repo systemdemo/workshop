@@ -1,0 +1,7 @@
+#!/usr/bin/env bpftrace
+
+BEGIN {
+    printf("starting to monitor files for ppid %d\n", $1);
+    @exectree[$1] = 1;
+}
+

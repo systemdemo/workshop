@@ -435,9 +435,9 @@ PID     TID     COMM            FUNC             -
 
 try something fun in python like
 
-```commandline
->>> import threading
->>> threading.Thread(target = lambda :sys.audit("hello")).start()
+```python
+import threading
+threading.Thread(target = lambda :sys.audit("hello")).start()
 ```
 
 you will see 

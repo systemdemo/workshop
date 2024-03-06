@@ -1,0 +1,17 @@
+#!/usr/bin/env bpftrace
+
+BEGIN {
+    printf("starting to monitor files for ppid %d\n", $1);
+    @exectree[$1] = 1;
+}
+
+tracepoint:syscalls:sys_exit_clone /@exectree[pid]/ {
+    if (args.ret > 0){
+        printf("new process forked with pid %d\n", args.ret);
+        @exectree[args.ret] = 1;
+    }
+}
+
+tracepoint:syscalls:sys_enter_exit_group /@exectree[pid]/ {
+    delete(@exectree[pid]);
+}

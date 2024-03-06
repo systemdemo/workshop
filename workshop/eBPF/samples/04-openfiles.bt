@@ -1,0 +1,25 @@
+#!/usr/bin/env bpftrace
+
+BEGIN {
+    @exectree[$1] = 1;
+}
+
+tracepoint:syscalls:sys_exit_clone /@exectree[pid]/ {
+    if (args.ret > 0){
+        @exectree[args.ret] = 1;
+    }
+}
+
+tracepoint:syscalls:sys_enter_exit_group /@exectree[pid]/ {
+    delete(@exectree[pid]);
+}
+
+tracepoint:syscalls:sys_enter_openat /@exectree[pid]/{
+    @filename[tid] = args.filename;
+}
+tracepoint:syscalls:sys_exit_openat /@filename[tid]/{
+    if (args.ret > 0){
+        printf("%s\n", str(@filename[tid]));
+    }
+    delete(@filename[tid]);
+}
