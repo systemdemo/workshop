@@ -1,4 +1,4 @@
-In this section, we will create an sBPF program that performs actions.
+In this section, we will create an eBPF program that performs actions.
 
 ---
 
