@@ -16,6 +16,7 @@ PYSTEMD_REPO="https://github.com/systemd/pystemd"
 
 sudo mkdir -p "$DEBIAN_ROOT" "$PYSTEMD_SRC"
 sudo dnf install -y git\
+    kernel-core\
     gcc\
     debootstrap\
     systemd-devel\
@@ -166,7 +167,7 @@ if [ ! -f "$cpython_bin" ]; then
       --disable-shared \
       --enable-loadable-sqlite-extensions \
       --prefix /opt/cpython
-  make
+  make -j 10
   make install
 fi
 
