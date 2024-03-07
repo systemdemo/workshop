@@ -628,7 +628,7 @@ def lint():
 
 @linode.command()
 @click.option("--from-image", default="linode/fedora39")
-@click.argument("build_label", default = LINODE_BUILD_LABEL)
+@click.argument("build_label", default=LINODE_BUILD_LABEL)
 def build(from_image, build_label):
     """
     Build the initial the base image from runing the provision script. script must be check in in github
@@ -651,9 +651,10 @@ def build(from_image, build_label):
     )
     print("Linode IP:", new_linode.ipv4[0])
     print("provisioning instance")
-    while next(
-        client.linode.instances(linode_api4.Instance.label == build_label)
-    ).status == "provisioning":
+    while (
+        next(client.linode.instances(linode_api4.Instance.label == build_label)).status
+        == "provisioning"
+    ):
         sys.stdout.write(".")
         sys.stdout.flush()
         sleep(1)
@@ -686,7 +687,7 @@ def build(from_image, build_label):
 
 
 @linode.command()
-@click.argument("host_label", default = LINODE_BUILD_LABEL)
+@click.argument("host_label", default=LINODE_BUILD_LABEL)
 def provision(host_label):
     """
     Provision a host, the host mjst be alerady runing
@@ -697,9 +698,7 @@ def provision(host_label):
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
 
-    new_linode = next(
-        client.linode.instances(linode_api4.Instance.label == host_label)
-    )
+    new_linode = next(client.linode.instances(linode_api4.Instance.label == host_label))
 
     subprocess.run(
         [
@@ -738,6 +737,7 @@ def ssh(host_label):
         check=True,
     )
 
+
 @linode.command()
 @click.argument("host_label", default="scale-fedora39")
 def create_image(host_label):
@@ -746,9 +746,7 @@ def create_image(host_label):
         (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
     )
 
-    new_linode = next(
-        client.linode.instances(linode_api4.Instance.label == host_label)
-    )
+    new_linode = next(client.linode.instances(linode_api4.Instance.label == host_label))
     disk = [*new_linode.disks][0]
     image_label = "scale_2024_" + datetime.today().strftime("%Y.%m.%d.%H%M")
     # maybe add some tags
@@ -774,6 +772,7 @@ def kill_machines():
     for instance in client.linode.instances():
         instance.delete()
 
+
 @linode.command()
 @click.argument("host_label", required=True)
 def kill(host_label):
@@ -783,6 +782,7 @@ def kill(host_label):
     )
 
     next(client.linode.instances(linode_api4.Instance.label == host_label)).delete()
+
 
 @linode.command()
 def list_images():

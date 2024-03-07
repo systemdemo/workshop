@@ -170,3 +170,143 @@ tracepoint:syscalls:sys_exit_openat /@filename[tid]/{
 Note on bugs, or don't sue us if this does not work on your system...
 
 1. You can clone and never exit; signals and other things can influence this.
+
+# Building a firewall 
+
+Okay, that was some clickbait if I ever saw any... However, we won't be building an actual firewall here. Instead, we will delve into XDP and explore how to use Python (or any user space program) to manipulate the behavior of an eBPF program. We'll begin with a basic script that captures pings and sends them to user space, then modify it to read a list of IP addresses from a file and subsequently move them to the kernel for blocking purposes.
+
+navegate to the fwll example
+
+```commandline
+cd /usr/local/src/workshop/workshop/eBPF/fwll/
+```
+
+We will start with the only way to start, with a [tutorial](https://github.com/lizrice/ebpf-beginners/tree/main) by lizrice.
+take a look at [./lizrice.py](lizrice.py)
+
+and on a split terminal execute:
+
+
+```commandline
+cd /usr/local/src/workshop/workshop/eBPF/fwll/
+./lizrice.py
+```
+
+you probably see a bunch of
+
+```
+Protocol TCP: counter 3                                                                                                                                                                                                                        
+Protocol TCP: counter 4 
+```
+
+then on a terminal execute `ping 8.8.8.8` to see
+
+```commandline
+Protocol ICMP: counter 1,Protocol TCP: counter 12                                                                                                                                                                                              
+Protocol ICMP: counter 3,Protocol TCP: counter 19
+```
+
+then lets do some UDP, `ping netline.net` (i pick netline.net because unless I know you are in the room, you probably have never ping this host)
+
+```
+Protocol ICMP: counter 7,Protocol TCP: counter 66
+Protocol ICMP: counter 7,Protocol TCP: counter 83,Protocol UDP: counter 1
+Protocol ICMP: counter 11,Protocol TCP: counter 91,Protocol UDP: counter 3
+Protocol ICMP: counter 11,Protocol TCP: counter 93,Protocol UDP: counter 3
+```
+
+How does this works?, if you see liz code, youll notice a very simple c program inlined
+
+```c
+#include "packet.h"
+
+BPF_HASH(packets);
+
+int hello_packet(struct xdp_md *ctx) {
+    u64 counter = 0;
+    u64 key = 0;
+    u64 *p;
+
+    key = get_protocol(ctx);
+    if (key != 0) {
+        p = packets.lookup(&key);
+        if (p != 0) {
+            counter = *
+            p;
+        }
+        counter++;
+        packets.update(&key, &counter);
+    }
+
+    return XDP_PASS;
+}
+```
+
+She includes a packet.h file that's very handy, we modified a bit but `get_protocol` (called `lookup_protocol` on the originial file)
+will tell you what protocol a particular package is. then start a counter using a `BPF_HASH(packets)`. The final line
+its `return XDP_PASS;` meaning that the package is allowed to "pass".
+
+on the python side, we capture that info, and display it (we modify the original code to display the protocol name)
+
+```
+b = BPF(text=program)
+b.attach_xdp(dev="eth0", fn=b.load_func("hello_packet", BPF.XDP))
+
+IP_PROTO = {
+    socket.IPPROTO_ICMP: "ICMP",
+    socket.IPPROTO_TCP: "TCP",
+    socket.IPPROTO_UDP: "UDP",
+}
+
+try:
+    while True:
+        sleep(2)
+        s = []
+        for k, v in b["packets"].items():
+            proto = IP_PROTO.get(k.value, k.value)
+            s.append(f"Protocol {proto}: counter {v.value}")
+        print(",".join(s))
+except KeyboardInterrupt:
+    b.remove_xdp(dev="eth0")
+```
+
+
+the important things here are
+1. With `b.attach_xdp` we attach to an interface.
+2. with `b["packets"]` we read the EBPF_HASH created in c.
+3. when teh program exits, we need to detach the program with `b.remove_xdp`
+
+## lets pass the actual source and destination
+
+See [bubble_packet.py](fwll/bubble_packet.py)... this scripts will build on lizrice script and 
+expand on it
+
+the relevant parts are
+
+1. create a `BPF_PERF_OUTPUT` named `events`.
+2. we submit events from the kernel with `events.perf_submit`. 
+3. we register the function `process_event` be called when the kernel submit an event.
+4. we send a custom struct to userspace... userspace pool for event with `b.perf_buffer_poll()`
+
+## lets block pings based on a file.
+
+See [bubble_packet.py](fwll/filter_packet.py)... this scripts reads from a file on disc called deny, and load 
+it in the kernel, then a function will decide to block packages.
+
+
+the relevant parts are:
+
+1. we create a map with `BPF_HASH(deny, u32, u32)`, keys will be u32 and value will be u32 (we dont use the value TBH)
+2. the main functions its just a should filter or not:
+```c
+int filter_packet(struct xdp_md *ctx) {
+    if (should_filter(ctx)){
+        return XDP_DROP;
+    }
+    return XDP_PASS;
+}
+```
+3. the `should_filter` method looks in the hash table `deny` for the ip to deny it.
+4. in python-land (userspace) we read the deny file and load its values into the hash map.
+
+## a combination of those two can be found in [bubble_packet.py](fwll/fw.py)
