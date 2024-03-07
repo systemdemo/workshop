@@ -200,7 +200,7 @@ multi-user.target is a special target unit for setting up a non-graphical multi-
 [~] systemctl set-default pasta.target
 ```
 
-If you get a `Failed to set default target: Refusing to operate on alias name or linked unit file: pasta.target` error, then it may be because pasta.target is a symlink rather than a file. Remove the symlink and copy over the actual file in its place. Then try again.
+What this command does it redirect default.target's symlink to point at the target you set. You can do this symlink redirection manually yourself, however there are safety checks in place in the command to prevent you from setting the boot target to something invalid. For example, if you get a `Failed to set default target: Refusing to operate on alias name or linked unit file: pasta.target` error, then it may be because pasta.target is a symlink rather than a file. (If this happens to you, remove the symlink and copy over the actual file in its place. Then try again.)
 
 Remember that you can associate a service to this target in order to start the unit at that boot point. We've provided a simple one for you:
 ```
