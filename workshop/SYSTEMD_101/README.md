@@ -265,7 +265,7 @@ Will show the status of the service that’s running the process 9178.
 
 > Exercise: If every process (with a PID) on your machine is running under a systemd unit, what's the unit for PID 1?
 
-> run systemctl status with no pid... what happens?
+> Exercise: Run `systemctl status` with no PID. What do you see?
 ---
 
 ### systemctl cat
@@ -390,7 +390,34 @@ The difference between `kill` and `stop`, is that when executing `systemctl stop
 
 ### systemctl list-units
 
-run it!!!
+If you wanted to get a list of all the units that systemd has in memory, you can use `systemctl list-units` (this is equivalent to running `systemctl` without any arguments):
+```
+[~] systemctl list-units
+UNIT                                                                                              LOAD   ACTIVE SUB       DESCRIPTION                                    >
+  proc-sys-fs-binfmt_misc.automount                                                                 loaded active running   Arbitrary Executable File Formats File System A>
+  sys-devices-pci0000:00-0000:00:02.0-drm-card1-card1\x2deDP\x2d1-intel_backlight.device            loaded active plugged   /sys/devices/pci0000:00/0000:00:02.0/drm/card1/>
+  sys-devices-pci0000:00-0000:00:14.0-usb1-1\x2d10-1\x2d10:1.0-bluetooth-hci0.device                loaded active plugged   /sys/devices/pci0000:00/0000:00:14.0/usb1/1-10/>
+  sys-devices-pci0000:00-0000:00:14.0-usb1-1\x2d2.device                                            loaded active plugged   Yubikey 4/5 OTP+U2F+CCID
+  sys-devices-pci0000:00-0000:00:14.3-net-wlp0s20f3.device                                          loaded active plugged   Comet Lake PCH-LP CNVi WiFi (Wi-Fi 6 AX201 160M>
+  sys-devices-pci0000:00-0000:00:14.3-ptp-ptp1.device                                               loaded active plugged   /sys/devices/pci0000:00/0000:00:14.3/ptp/ptp1
+  ...
+```
+
+You can also apply patterns to the command such as `systemctl list-units *service`:
+```
+[~] systemctl list-units *service
+UNIT                                                                                      LOAD   ACTIVE SUB     DESCRIPTION                                              >
+  abrt-journal-core.service                                                                 loaded active running ABRT coredumpctl message creator
+  abrt-oops.service                                                                         loaded active running ABRT kernel log watcher
+  abrt-xorg.service                                                                         loaded active running ABRT Xorg log watcher
+  abrtd.service                                                                             loaded active running ABRT Daemon
+  accounts-daemon.service                                                                   loaded active running Accounts Service
+```
+
+There are additional subcommands to get a list of units. Give them a try:
+- `systemctl list-paths <pattern>`
+- `systemctl list-sockets <pattern>`
+- `systemctl list-timers <pattern>`
 
 # Using systemd-run to run transient (ad-hoc / ephemeral) services
 
@@ -530,4 +557,3 @@ And as you can see the terminal is stuck waiting for you to send the ctl-C signa
 > Note: `systemd-run --pty bash` and  `systemd-run --shell` are functionally equivalent
 
 > Note: You can run `systemd-run --pty ipython` to start an interactive ipython shell.
-
