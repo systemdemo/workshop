@@ -4,6 +4,7 @@ import http.server
 import socketserver
 from pathlib import Path
 import os
+
 PORT = 8000
 
 Handler = http.server.SimpleHTTPRequestHandler
@@ -12,7 +13,5 @@ os.chdir(Path(__file__).absolute().parent)
 
 if __name__ == "__main__":
     with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        print("serving at port", PORT)
+        print(f"[{os.getpid()}] serving at port", PORT)
         httpd.serve_forever()
-
-        

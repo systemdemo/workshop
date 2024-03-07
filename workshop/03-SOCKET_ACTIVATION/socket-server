@@ -17,11 +17,14 @@ PORT = 8000
 Handler = http.server.SimpleHTTPRequestHandler
 
 
-
-
-
 class MyTCPServer(socketserver.TCPServer):
-    def __init__(self: Self, server_address: tuple[str, int], RequestHandlerClass: Callable[[Any, Any, Self], socketserver.BaseRequestHandler]) -> None:
+    def __init__(
+        self: Self,
+        server_address: tuple[str, int],
+        RequestHandlerClass: Callable[
+            [Any, Any, Self], socketserver.BaseRequestHandler
+        ],
+    ) -> None:
         socketserver.BaseServer.__init__(self, server_address, RequestHandlerClass)
         self.socket = socket.fromfd(
             pystemd.daemon.LISTEN_FDS_START,
@@ -29,16 +32,17 @@ class MyTCPServer(socketserver.TCPServer):
             self.socket_type,
         )
 
+
 if __name__ == "__main__":
-    
-    pprint({
-        **os.environ,
-        "LISTEN_FDS_START": pystemd.daemon.LISTEN_FDS_START,
-        "listen_fds": pystemd.daemon.listen_fds()
-    })
+
+    pprint(
+        {
+            **os.environ,
+            "LISTEN_FDS_START": pystemd.daemon.LISTEN_FDS_START,
+            "listen_fds": pystemd.daemon.listen_fds(),
+        }
+    )
 
     with MyTCPServer(("", PORT), Handler) as httpd:
         print("serving at port", PORT)
         httpd.serve_forever()
-
-        

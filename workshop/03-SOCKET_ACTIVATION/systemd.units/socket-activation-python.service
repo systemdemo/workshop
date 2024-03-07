@@ -6,4 +6,4 @@ Requires=socket-activation-python.socket
 
 [Service]
 WorkingDirectory=/opt/workshop
-ExecStart=/usr/bin/python3 /opt/workshop/socket-activation/socket-server
+ExecStart=/usr/bin/python3 /usr/local/src/workshop/workshop/03-SOCKET_ACTIVATION/socket-server

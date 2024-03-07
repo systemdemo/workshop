@@ -622,6 +622,7 @@ def lint():
             THIS_DIR / "workshopctl",
             THIS_DIR / "bin" / "pystemd-shell",
             THIS_DIR / "bin" / "provision-host",
+            *(THIS_DIR / "workshop" / "03-SOCKET_ACTIVATION").glob("*server*"),
         ]
     )
 
