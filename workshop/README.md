@@ -9,9 +9,9 @@
 1. [Dependencies and More](SYSTEMD_101/dependencies.md)
 1. [Sandboxing](SANDBOXING/README.md)
 1. [Journald](JOURNAL_101/README.md)
-1. [systemd-analyze](SERVICES/README.md)
-   1. [systemd-analyze security nginx](SERVICES/systemd-analyze-nginx.md)
-   1. WIP: [systemd-analyze verify](SERVICES/systemd-analyze-verify.md)
+1. [systemd-analyze](ANALYZE/README.md)
+   1. [systemd-analyze security nginx](ANALYZE/systemd-analyze-nginx.md)
+   1. WIP: [systemd-analyze verify](ANALYZE/systemd-analyze-verify.md)
 
 
 # Systemd 201.
