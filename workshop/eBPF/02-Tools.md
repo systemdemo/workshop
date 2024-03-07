@@ -3,7 +3,7 @@ Now that we have a good understanding of what syscalls are, and how to monitor t
 
 eBPF can be used  for networking, observability and security; we will focus mostly on observability.
 
-In this section, we will not dive much into the in and out, but we will explore a couple of tools that come with bcc-tools. A few caveats before we start. 
+In this section, we will not dive much into the in and out, but we will explore a couple of tools that come with bcc-tools. A few caveats before we start.
 
 
 
@@ -15,11 +15,11 @@ Ok, let's get started…
 
 # Exploring bcc-tools
 
-BCC stand for BPF Compiler collection,  is a toolset based on eBPF technology that allows you to analyze both OS and 
+BCC stand for BPF Compiler collection,  is a toolset based on eBPF technology that allows you to analyze both OS and
 network performance of Linux distributions with ease.
 
 /usr/share/bcc/tools/ is full of a bunch of useful scripts that you can use in your analysis.
-However, the best thing about them is that they are all written in python and are very simple to understand… 
+However, the best thing about them is that they are all written in python and are very simple to understand…
 You can use them as learning materials.
 Let's see a couple:
 
@@ -30,10 +30,10 @@ what gets executed (execve calls) in the entire system, to call it just run:
 
 
 ```
-[root@7ece76c6d931 workshop]# /usr/share/bcc/tools/execsnoop 
+[root@7ece76c6d931 workshop]# /usr/share/bcc/tools/execsnoop
 ```
 
-A bunch of garbage is sent to stderr/out from compiling something (no worries,  
+A bunch of garbage is sent to stderr/out from compiling something (no worries,
 we will understand that part later)...
 
 
@@ -62,20 +62,20 @@ Then you finally start getting some data
 
 
 ```
-PCOMM            PID     PPID    RET ARGS                                                                                                                                                                                                      
-solo_collector   1214474 1         0 /opt/chef-solo/bin/solo_collector --bundle_name cpe_init --verbose                                                                                                                                                                                                                                                           
-systemd-userwor  1214496 1208832   0 /usr/lib/systemd/systemd-userwork xxxxxxxxxxxxxxxx                                                                                                                                                        
-systemd-userwor  1214495 1208832   0 /usr/lib/systemd/systemd-userwork xxxxxxxxxxxxxxxx                                                                                                                                                        
-systemd-userwor  1214497 1208832   0 /usr/lib/systemd/systemd-userwork xxxxxxxxxxxxxxxx                                                                                                                                                        
+PCOMM            PID     PPID    RET ARGS
+solo_collector   1214474 1         0 /opt/chef-solo/bin/solo_collector --bundle_name cpe_init --verbose
+systemd-userwor  1214496 1208832   0 /usr/lib/systemd/systemd-userwork xxxxxxxxxxxxxxxx
+systemd-userwor  1214495 1208832   0 /usr/lib/systemd/systemd-userwork xxxxxxxxxxxxxxxx
+systemd-userwor  1214497 1208832   0 /usr/lib/systemd/systemd-userwork xxxxxxxxxxxxxxxx
 git              1214529 1052931   0 /usr/share/gitkraken/resources/app.asar.unpacked/git/bin/git -c gpg.format=openpgp -c tag.gpgSign=0 -c commit.gpgSign=0 -c fetch.prune=1 -c gpg.program=gpg -c credential.helper= -c safe.directory=* -c g
-c.auto=0 -c gpg.ssh.program=ssh-keygen -c                                                                                                                                                                     
+c.auto=0 -c gpg.ssh.program=ssh-keygen -c
 ```
 
 
-This app, monitor all the execs that happen on your system, there is no 
-“sampling here”, so everything that get executed will show up here, go on, 
-open a new terminal and execute something like “ls -ll” and see the line that pops 
-up is  
+This app, monitor all the execs that happen on your system, there is no
+“sampling here”, so everything that get executed will show up here, go on,
+open a new terminal and execute something like “ls -ll” and see the line that pops
+up is
 
 
 ```
@@ -93,30 +93,30 @@ You can see the code by inspecting /usr/share/bcc/tools/execsnoop, but we live i
 If you want to monitor what network calls get done, you can with tcpconnect
 
 ```
-/usr/share/bcc/tools/tcpconnect -d 
+/usr/share/bcc/tools/tcpconnect -d
 ...
-Tracing connect ... Hit Ctrl-C to end                                                                                                                                                                                                          
-PID     COMM         IP SADDR            DADDR            DPORT                                                                                                                                                                                
-5733    Chrome_Child 6  2620:10d:c085:2103:ccf2:4833:b033:8fbc 2a03:2880:f031:15:face:b00c:0:420d 443                                                                                                                                          
-482045  IOThreadPool 6  ::1              ::1              1456                                                                                                                                                                                 
-482045  IOThreadPool 6  ::1              ::1              1456                                                                                                                                                                                 
-2797    ScheduledSrv 4  127.0.0.1        127.0.0.1        4244   
-36402   connectEvb   6  2620:10d:c085:2103:ccf2:4833:b033:8fbc 2a03:2880:f031:e1:face:b00c:0:434e 443    
-36402   connectEvb   4  172.26.26.189    157.240.22.223   443    
-   
+Tracing connect ... Hit Ctrl-C to end
+PID     COMM         IP SADDR            DADDR            DPORT
+5733    Chrome_Child 6  2620:10d:c085:2103:ccf2:4833:b033:8fbc 2a03:2880:f031:15:face:b00c:0:420d 443
+482045  IOThreadPool 6  ::1              ::1              1456
+482045  IOThreadPool 6  ::1              ::1              1456
+2797    ScheduledSrv 4  127.0.0.1        127.0.0.1        4244
+36402   connectEvb   6  2620:10d:c085:2103:ccf2:4833:b033:8fbc 2a03:2880:f031:e1:face:b00c:0:434e 443
+36402   connectEvb   4  172.26.26.189    157.240.22.223   443
+
 ```
 
 
 open another terminal and execute `wget google.com -O-`, you'll see a new line like
 
 ```
-485785  wget         6  2620:10d:c085:2103:ccf2:4833:b033:8fbc 2607:f8b0:4005:80e::200e 80     
+485785  wget         6  2620:10d:c085:2103:ccf2:4833:b033:8fbc 2607:f8b0:4005:80e::200e 80
 485785  wget         6  2620:10d:c085:2103:ccf2:4833:b033:8fbc 2607:f8b0:4005:802::2004 80
 ```
 
-This looks very familiar to tcpdump, and yes, it is very familiar, the only difference is that 
-this is written in python and straightforward to read... all it does its hook itself to a 
-few syscalls that you can see [here](https://github.com/iovisor/bcc/blob/699cd5f695b815e6e02ae92a4deed8c7ca23a2b6/tools/tcpconnect.py#L531-L538) 
+This looks very familiar to tcpdump, and yes, it is very familiar, the only difference is that
+this is written in python and straightforward to read... all it does its hook itself to a
+few syscalls that you can see [here](https://github.com/iovisor/bcc/blob/699cd5f695b815e6e02ae92a4deed8c7ca23a2b6/tools/tcpconnect.py#L531-L538)
 ... What's interesting is how you can hook to `udp_recvmsg` and `udpv6_queue_rcv_one_skb` to snoop DNS queries.
 
 ## tcplife
@@ -135,7 +135,7 @@ PID   COMM       LADDR           LPORT RADDR           RPORT TX_KB RX_KB MS
 12851 curl       10.0.2.15       34252 54.204.39.132   443       0    74 505.90
 ```
 
-execute a `wger google.com -O-` on another terminal and see it there... at this point I want to adress the concern of 
+execute a `wger google.com -O-` on another terminal and see it there... at this point I want to adress the concern of
 "wait, i already can sniff network with tcpdump, why do i want to know this". A good answer is provided by
 [this article](https://opensource.com/article/17/11/bccbpf-performance)
 
@@ -143,40 +143,40 @@ execute a `wger google.com -O-` on another terminal and see it there... at this 
 
 ## opensnoop
 
-There are three ways of opening a file ([`open`](https://man7.org/linux/man-pages/man2/open.2.html), [`openat`](https://man7.org/linux/man-pages/man2/open.2.html) and [`openat2`](https://man7.org/linux/man-pages/man2/openat2.2.html)… 
-yes deprecating things is hard). There is "snoop" that can undertand all 3 and answer the question "what files hsa been open" 
-its name its Opensnoop, and it monitors all 3, so no matter how a process wants to open a file, 
-this snoop will catch it, go on and execute /usr/share/bcc/tools/opensnoop , 
+There are three ways of opening a file ([`open`](https://man7.org/linux/man-pages/man2/open.2.html), [`openat`](https://man7.org/linux/man-pages/man2/open.2.html) and [`openat2`](https://man7.org/linux/man-pages/man2/openat2.2.html)…
+yes deprecating things is hard). There is "snoop" that can undertand all 3 and answer the question "what files hsa been open"
+its name its Opensnoop, and it monitors all 3, so no matter how a process wants to open a file,
+this snoop will catch it, go on and execute /usr/share/bcc/tools/opensnoop ,
 and see the output.
 
 ```commandline
-[root@aleivag-fedora-PC1C0JVZ workshop]# /usr/share/bcc/tools/opensnoop                                                                                                                                                                                                                                                                                                                                                   
-PID    COMM               FD ERR PATH                                                                                                                                                                                                          
-2797   inot-hand-1       204   0 /etc/passwd                                                                                                                                                                                                   
-2797   inot-hand-1       204   0 /etc/group                                                                                                                                                                                                    
-2797   inot-hand-1       204   0 /etc/passwd                                                                                                                                                                                                   
-2797   inot-hand-1       204   0 /etc/group                                                                                                                                                                                                    
-2797   inot-hand-1       204   0 /etc/passwd                                                                                                                                                                                                   
-2797   inot-hand-1       204   0 /etc/group                                                                                                                                                                                                    
-2797   inot-hand-1       204   0 /etc/passwd                                                                                                                                                                                                   
-2797   inot-hand-1       204   0 /etc/group                                                                                                                                                                                                    
-2797   inot-hand-1       204   0 /etc/passwd                                                                                                                                                                                                   
-2797   inot-hand-1       204   0 /etc/group                                                                                                                                                                                                    
-2797   inot-hand-1       204   0 /etc/passwd                                                                                                                                                                                                   
-2797   inot-hand-1       204   0 /etc/group                                                                                                                                                                                                    
-2797   inot-hand-1       204   0 /etc/passwd                                                                                                                                                                                                   
-2797   inot-hand-1       204   0 /etc/group                                                                                                                                                                                                    
-2797   inot-hand-1       204   0 /etc/passwd                   
+[root@aleivag-fedora-PC1C0JVZ workshop]# /usr/share/bcc/tools/opensnoop
+PID    COMM               FD ERR PATH
+2797   inot-hand-1       204   0 /etc/passwd
+2797   inot-hand-1       204   0 /etc/group
+2797   inot-hand-1       204   0 /etc/passwd
+2797   inot-hand-1       204   0 /etc/group
+2797   inot-hand-1       204   0 /etc/passwd
+2797   inot-hand-1       204   0 /etc/group
+2797   inot-hand-1       204   0 /etc/passwd
+2797   inot-hand-1       204   0 /etc/group
+2797   inot-hand-1       204   0 /etc/passwd
+2797   inot-hand-1       204   0 /etc/group
+2797   inot-hand-1       204   0 /etc/passwd
+2797   inot-hand-1       204   0 /etc/group
+2797   inot-hand-1       204   0 /etc/passwd
+2797   inot-hand-1       204   0 /etc/group
+2797   inot-hand-1       204   0 /etc/passwd
 ```
 
 
 ## other snoops to look
 
-These programs are called snoops because Brendan Gregg worked a bunch with solaris back in the day, where the prefer name for tracers was “snoop”. you can execute 
+These programs are called snoops because Brendan Gregg worked a bunch with solaris back in the day, where the prefer name for tracers was “snoop”. you can execute
 
 
 ```
-[root@7ece76c6d931 workshop]# ls /usr/share/bcc/tools/*snoop 
+[root@7ece76c6d931 workshop]# ls /usr/share/bcc/tools/*snoop
 /usr/share/bcc/tools/bindsnoop     /usr/share/bcc/tools/dcsnoop    /usr/share/bcc/tools/exitsnoop   /usr/share/bcc/tools/opensnoop  /usr/share/bcc/tools/statsnoop    /usr/share/bcc/tools/ttysnoop
 /usr/share/bcc/tools/biosnoop      /usr/share/bcc/tools/drsnoop    /usr/share/bcc/tools/killsnoop   /usr/share/bcc/tools/shmsnoop   /usr/share/bcc/tools/syncsnoop
 /usr/share/bcc/tools/compactsnoop  /usr/share/bcc/tools/execsnoop  /usr/share/bcc/tools/mountsnoop  /usr/share/bcc/tools/sofdsnoop  /usr/share/bcc/tools/threadsnoop
@@ -190,19 +190,19 @@ I say kind of because sometimes there are redundant syscalls, like open that we 
 # Using bpftrace
 
 bpftrace is a powerful and flexible opensource tracing tool for Linux systems.
-It is built on top of BPF and BCC. bpftrace simplifies the process of writing scripts 
-to trace various events in the system, making it easier for administrators and 
+It is built on top of BPF and BCC. bpftrace simplifies the process of writing scripts
+to trace various events in the system, making it easier for administrators and
 developers to analyze and monitor system behavior in real-time.
 
-In a way... bpftrace is like awk, in a way that is a full programing language, 
-but that its most used as one liner.  
+In a way... bpftrace is like awk, in a way that is a full programing language,
+but that its most used as one liner.
 
-> note: The following section looks pretty similar to the [official tutorial](https://github.com/bpftrace/bpftrace/blob/master/docs/tutorial_one_liners.md) 
+> note: The following section looks pretty similar to the [official tutorial](https://github.com/bpftrace/bpftrace/blob/master/docs/tutorial_one_liners.md)
 
 ## listing all the probes we can trace
 
 Same as BCC, you will ultimately end up hooking yourself to some sort of trace event, its
-reasonable to ask then, "what events, probes can I hook myself". For that you can call 
+reasonable to ask then, "what events, probes can I hook myself". For that you can call
 `bpftrace` with the  `-l` option and some filter, for instance, if we want to know what "open" events there are
 you can search for:
 
@@ -244,7 +244,7 @@ hello world
 
 "We did nothing, but in a way, we did a lot!"
 
-But instead of hanging, we can 
+But instead of hanging, we can
 ```
 # bpftrace -e 'BEGIN { printf("hello world\n"); exit() }'
 Attaching 1 probe...
@@ -278,7 +278,7 @@ ls README.md
 ```
 
 
-And CAT will show up in the bpftrace, but not ls, 
+And CAT will show up in the bpftrace, but not ls,
 
 ```commandline
 cat              1948158 README.md
@@ -304,10 +304,10 @@ openat, see
 ```
 bpftrace -e '
 
-    tracepoint:syscalls:sys_enter_openat /str(args->filename)=="README.md"/{  
-        @filename[tid] = args.filename; 
+    tracepoint:syscalls:sys_enter_openat /str(args->filename)=="README.md"/{
+        @filename[tid] = args.filename;
     }
-    
+
     tracepoint:syscalls:sys_exit_openat /@filename[tid]/{
         if (args.ret > 0){
             printf("%-16s %-6d %s\n", comm, pid, str(@filename[tid]));
@@ -348,7 +348,7 @@ Yes the same as with awk, you can do scripts, and the same as BCC, bpftrace come
 of prebuild scripts,
 that you can find in `/usr/share/bpftrace/tools/` like [/usr/share/bpftrace/tools/opensnoop.bt](https://github.com/bpftrace/bpftrace/blob/master/tools/opensnoop.bt)
 
-In fact, most of the scripts in `/usr/share/bcc/tools` can also be found in `/usr/share/bpftrace/tools`, 
+In fact, most of the scripts in `/usr/share/bcc/tools` can also be found in `/usr/share/bpftrace/tools`,
 This begs the question, which one is better? The answer is neither and both... and depends.
 
 * **bpftrace**: Is useful when you need to write a program to collect data and display it in the same process, there are no command-line arguments, so most things in bpftrace are hardcoded. On the other hand, writing a bpftrace program is simple and the language does not stand in the way of your program, making things like "attaching to multiple events" very simple.
@@ -371,19 +371,19 @@ from [introduction-bpftrace](https://opensource.com/article/19/8/introduction-bp
 # Userspace Probes
 
 We can't let the kernel have all the fun. For this Userspace Probes, also known as USDT (Userspace Statically Defined Tracing) or uprobes, exists.
-They are a type of dynamic tracing tool that allows developers to insert trace points into running processes without modifying the 
-kernel or recompiling the application. This makes them useful for debugging and profiling applications in production environments. 
+They are a type of dynamic tracing tool that allows developers to insert trace points into running processes without modifying the
+kernel or recompiling the application. This makes them useful for debugging and profiling applications in production environments.
 
 The caveat is that application must be compiled with support for this, and they do come with "some" performance cost.
 Let's explore this ideas with some very simple example... (we will do a more complex one on the next chapter)
 
 ## Python Probes USDT
 
-"system python" (a.k.a as the python that comes with your machine) does not come with any uprobes (for performance reasons), 
+"system python" (a.k.a as the python that comes with your machine) does not come with any uprobes (for performance reasons),
 but in this workshop we provide a python interpreter compiled with some support, you can see the [--with-dtrace](https://github.com/systemdemo/workshop/blob/main/bin/provision-build#L161-L166)
 on python ./configure
 
-to know if a binary ahs uprobes, you can 
+to know if a binary ahs uprobes, you can
 
 ```commandline
 [root@aleivag-fedora-PC1C0JVZ workshop]# /usr/share/bcc/tools/tplist -l /opt/cpython/bin/python3.12
@@ -407,7 +407,7 @@ To explore this, probes, lets start a python interpreter on another terminal
 # /opt/cpython/bin/python3.12
 Python 3.12.2 (tags/v3.12.2:6abddd9f6a, Feb 29 2024, 01:33:51) [GCC 13.2.1 20231205 (Red Hat 13.2.1-6)] on linux
 Type "help", "copyright", "credits" or "license" for more information.
->>> import os           
+>>> import os
 >>> os.getpid()
 2758
 ```
@@ -417,20 +417,20 @@ now let's hook to this probe, both bcc and bpftrace have support for this, so le
 /usr/share/bcc/tools/trace 'u:/opt/cpython/bin/python3.12:audit "%s", arg1, ' -p 2758
 ```
 
-now... python provides a high-level interface to call this event 
+now... python provides a high-level interface to call this event
 
 
 ```commandline
->>> import sys                                                                                                                                                                                                                                 
->>> sys.audit("hello") 
+>>> import sys
+>>> sys.audit("hello")
 ```
 
 and you can see, among many calls, the string hello
 
 ```commandline
-PID     TID     COMM            FUNC             -   
+PID     TID     COMM            FUNC             -
 ...
-2758  2758  python3.12      audit            hello  
+2758  2758  python3.12      audit            hello
 ```
 
 try something fun in python like
@@ -440,9 +440,9 @@ import threading
 threading.Thread(target = lambda :sys.audit("hello")).start()
 ```
 
-you will see 
+you will see
 ```
-PID     TID     COMM            FUNC             -   
+PID     TID     COMM            FUNC             -
 ...
 2758    2758    python3         audit            _thread.start_new_thread
 2758    9516    python3         audit            hello
@@ -450,3 +450,6 @@ PID     TID     COMM            FUNC             -
 
 and you'll see that the TID changes, if you execute `threading.Thread(target = lambda :sys.audit("hello")).start()` again
 you'll see a different TID.
+
+---
+[back to TOC](../README.md)

@@ -1,10 +1,10 @@
 # Other systemd unit types
 
-systemd supports several types of units, each designed to manage different aspects of the system. 
+systemd supports several types of units, each designed to manage different aspects of the system.
 
 ## Timers
 
-Systemd timers are a powerful feature of the systemd init system that allow you to schedule the execution of specific tasks on your system. Similar to cron jobs, systemd timers enable you to run scripts, execute commands, or start services at specific times, or on specific intervals. However, unlike traditional cron jobs, systemd timers are more flexible, more accurate, and provide better logging and error reporting. But they can be a bit hard to understand. 
+Systemd timers are a powerful feature of the systemd init system that allow you to schedule the execution of specific tasks on your system. Similar to cron jobs, systemd timers enable you to run scripts, execute commands, or start services at specific times, or on specific intervals. However, unlike traditional cron jobs, systemd timers are more flexible, more accurate, and provide better logging and error reporting. But they can be a bit hard to understand.
 In addition to their flexibility and accuracy, systemd timers offer several other advantages over traditional cron jobs, such as the ability to start tasks after a delay, handle failures more gracefully, and allow for more fine-grained control over when tasks are executed. Overall, systemd timers provide a more robust and reliable way to manage scheduled tasks on your system.
 
 ### Realtime timers
@@ -13,7 +13,7 @@ Traditionally when you setup a cron job, the information of when to execute, and
 
 ```
 */10 * * * * /usr/local/bin/check-disk-space
-```  
+```
 
 In systemd you create a [Timer unit](https://www.freedesktop.org/software/systemd/man/systemd.timer.html), that specifies “when to invoke a service unit”, and you specify the service unit that specifies “what to run”.
 
@@ -53,7 +53,7 @@ WantedBy=multi-user.target
 Now execute
 
 ```bash
-[~] systemctl start myfirsttimer.timer 
+[~] systemctl start myfirsttimer.timer
 [~] watch systemctl status myfirsttimer.{timer,service}
 ```
 
@@ -86,7 +86,7 @@ The output is:
 This is what we call realtime (i.e wallclock) timer, the [`OnCalendar`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#OnCalendar=) define when systemd will activate the service unit based on the internal clock, clocks can move forward on back, can be reset and manipulated, this means that something can could run twice or skip a run.
 
 ### Monotonic timers
-Timers also provide the [monotonic timers](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#OnActiveSec=); monotonic time is used to measure the amount of time that has passed since an arbitrary point in the past, and it is not affected by time adjustments or changes in the system clock. 
+Timers also provide the [monotonic timers](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#OnActiveSec=); monotonic time is used to measure the amount of time that has passed since an arbitrary point in the past, and it is not affected by time adjustments or changes in the system clock.
 
 You can do things like: trigger services to be executed 5 minutes after the system has booted,  or after a unit has been deactivated, etc. you do this by
 
@@ -101,7 +101,7 @@ Description=My first timer
 OnActiveSec=30s
 
 [Install]
-WantedBy=timers.target  
+WantedBy=timers.target
 ```
 
 To start a unit 30 seconds after the service has started, and never again. All this settings can be combined and you can end up with something like:
@@ -125,27 +125,27 @@ If you just need a fire and forget type of thing… you can use systemd-run to c
 
 Execute
 ```bash
-[root@eth50-1 ~] systemd-run --on-active=30s echo "hello from the past"                                                                                      
-Running timer as unit: run-r85fe61d719b34fe5a6938681d01c2ff8.timer                                                                                            
-Will run service as unit: run-r85fe61d719b34fe5a6938681d01c2ff8.service   
+[root@eth50-1 ~] systemd-run --on-active=30s echo "hello from the past"
+Running timer as unit: run-r85fe61d719b34fe5a6938681d01c2ff8.timer
+Will run service as unit: run-r85fe61d719b34fe5a6938681d01c2ff8.service
 ```
-Then you can just `systemctl status run-r85fe61d719b34fe5a6938681d01c2ff8.{service,timer}`  
+Then you can just `systemctl status run-r85fe61d719b34fe5a6938681d01c2ff8.{service,timer}`
 
 Before it runs
 
 ```yaml
-○ run-r85fe61d719b34fe5a6938681d01c2ff8.service - /usr/bin/echo hello from the past                                                                           
-     Loaded: loaded (/run/systemd/transient/run-r85fe61d719b34fe5a6938681d01c2ff8.service; transient)                                                         
-  Transient: yes                                                                                                                                              
-     Active: inactive (dead)                                                                                                                                  
-TriggeredBy: ● run-r85fe61d719b34fe5a6938681d01c2ff8.timer                                                                                                    
-                                                                                                                                                              
-● run-r85fe61d719b34fe5a6938681d01c2ff8.timer - /usr/bin/echo hello from the past                                                                             
-     Loaded: loaded (/run/systemd/transient/run-r85fe61d719b34fe5a6938681d01c2ff8.timer; transient)                                                           
-  Transient: yes                                                                                                                                              
-     Active: active (waiting) since Tue 2023-02-21 17:59:02 UTC; 21s ago                                                                                      
-      Until: Tue 2023-02-21 17:59:02 UTC; 21s ago                                                                                                             
-    Trigger: Tue 2023-02-21 17:59:32 UTC; 8s left                                                                                                             
+○ run-r85fe61d719b34fe5a6938681d01c2ff8.service - /usr/bin/echo hello from the past
+     Loaded: loaded (/run/systemd/transient/run-r85fe61d719b34fe5a6938681d01c2ff8.service; transient)
+  Transient: yes
+     Active: inactive (dead)
+TriggeredBy: ● run-r85fe61d719b34fe5a6938681d01c2ff8.timer
+
+● run-r85fe61d719b34fe5a6938681d01c2ff8.timer - /usr/bin/echo hello from the past
+     Loaded: loaded (/run/systemd/transient/run-r85fe61d719b34fe5a6938681d01c2ff8.timer; transient)
+  Transient: yes
+     Active: active (waiting) since Tue 2023-02-21 17:59:02 UTC; 21s ago
+      Until: Tue 2023-02-21 17:59:02 UTC; 21s ago
+    Trigger: Tue 2023-02-21 17:59:32 UTC; 8s left
    Triggers: ● run-r85fe61d719b34fe5a6938681d01c2ff8.service
 ```
 
@@ -195,7 +195,7 @@ A common error is to set all your timers at the same time (e.g. run some workloa
 To avoid this issue, systemd provides randomized options, [`RandomizedDelaySec`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#RandomizedDelaySec=) and [`FixedRandomDelay`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#FixedRandomDelay=) work to splay the execution of your timer in a window of time. try:
 
 
-```ini 
+```ini
 [Unit]
 Description=My first timer
 
@@ -209,7 +209,7 @@ WantedBy=timers.target
 
 > Question: What does it do?.
 
-### Extra options we wont cover: 
+### Extra options we wont cover:
 
 Take a look at [`WakeSystem`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#WakeSystem=) and [`OnClockChange=, OnTimezoneChange=`](https://www.freedesktop.org/software/systemd/man/systemd.timer.html#OnClockChange=) as they are edge cases, but useful never the less.
 
@@ -292,13 +292,13 @@ Check status of sshd
 
 ```
 
-Now lets simulate a change in `/etc/ssh/sshd_config` by uncommenting like 34 and 35 to 
+Now lets simulate a change in `/etc/ssh/sshd_config` by uncommenting like 34 and 35 to
 
 ```yaml
  33 # Logging
  34 SyslogFacility AUTH
  35 LogLevel INFO
- 36 
+ 36
 ```
 
 You could just touch the file to be honest
@@ -348,3 +348,6 @@ now lets create ping, and see pong been created.
 [~] ls /tmp/pong
 /tmp/pong
 ```
+
+---
+[back to TOC](../README.md)

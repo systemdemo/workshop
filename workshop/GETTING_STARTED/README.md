@@ -132,4 +132,4 @@ If `getenforce` says you are in enforcing mode, you can set it to permissive by 
 ```
 
 ---
-[back to TOC](https://github.com/systemdemo/workshop/blob/main/workshop/README.md)
+[back to TOC](../README.md)

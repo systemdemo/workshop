@@ -213,4 +213,4 @@ To only view the logs from the current boot:
 > Exercise: What is the priority associated with the first kernel message of the current boot?
 
 ---
-[back to TOC](https://github.com/systemdemo/workshop/blob/main/workshop/README.md)
+[back to TOC](../README.md)

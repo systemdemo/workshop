@@ -6,4 +6,4 @@ TODO: missing dependencies
 TODO: non-executable/missing commands
 
 ---
-[back to TOC](https://github.com/systemdemo/workshop/blob/main/workshop/README.md)
+[back to TOC](../README.md)

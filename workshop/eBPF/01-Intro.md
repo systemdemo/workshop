@@ -1,41 +1,41 @@
 
-Now we are going to talk about a topic that is not really systemd related, but we think it's interesting to talk about 
+Now we are going to talk about a topic that is not really systemd related, but we think it's interesting to talk about
 nevertheless, and we do this tutorial to have fun,and talk about fun stuff.
 
-The topic it’s titled “Extended Berkeley Packet Filter”, but you might have heard of it as eBPF (or just BPF, because lets 
-be honest, no one talks about BPF anymore). 
-If you work in the system space and you haven't heard of it, talk to us, as we wanna know how it feels to live under a 
+The topic it’s titled “Extended Berkeley Packet Filter”, but you might have heard of it as eBPF (or just BPF, because lets
+be honest, no one talks about BPF anymore).
+If you work in the system space and you haven't heard of it, talk to us, as we wanna know how it feels to live under a
 rock for the last 10 years.
 
-Jokes aside, eBPF is perhaps one of the hottest topics that comes out in conversation about systems profiling, management 
+Jokes aside, eBPF is perhaps one of the hottest topics that comes out in conversation about systems profiling, management
 and systems in general.
 
 
 # What is eBPF.
 
-eBPF is a powerful and flexible technology that allows you to write custom code that can be attached to various points 
-in the Linux kernel, _without needing to recompile the kernel itself_. It's the successor of BPF (Berkeley Packet Filter, 
-originally developed in 1992 in… well berkley) because it extends its capabilities and design (hence the name). 
+eBPF is a powerful and flexible technology that allows you to write custom code that can be attached to various points
+in the Linux kernel, _without needing to recompile the kernel itself_. It's the successor of BPF (Berkeley Packet Filter,
+originally developed in 1992 in… well berkley) because it extends its capabilities and design (hence the name).
 
-In simpler terms, you write a program, compile it, and then you ask the kernel to run it for you. Does this sound familiar? 
-There is another very famous programming language that people write, that reacts and interacts with a “bigger machine” 
-without needing to recompile this machine, and that's javascript. In many ways, eBPF is the javascript of the kernel. 
+In simpler terms, you write a program, compile it, and then you ask the kernel to run it for you. Does this sound familiar?
+There is another very famous programming language that people write, that reacts and interacts with a “bigger machine”
+without needing to recompile this machine, and that's javascript. In many ways, eBPF is the javascript of the kernel.
 
-One last thing to say before we dive into eBPF, is  that the world of eBPF seems to be divided in 2 groups of people, 
+One last thing to say before we dive into eBPF, is  that the world of eBPF seems to be divided in 2 groups of people,
 1) people who have never heard of it, or have but are not clear on what it is, and
-2) people who use eBPF to do very complex things, and very vocal about it, giving the impression to the first group that 
-eBPF is hard. 
+2) people who use eBPF to do very complex things, and very vocal about it, giving the impression to the first group that
+eBPF is hard.
 
 Well here we aim to show you all  that even though you can do complex things, it’s very easy to  get started.
 
-If you would like to know more about the history of eBPF there is [a fun documentary](https://youtu.be/Wb_vD3XZYOA?si=RRxG_rUwXxTf2xnh) 
-about it, that even have Brendan Gregg saying "this is like putting javascript into the kernel". 
+If you would like to know more about the history of eBPF there is [a fun documentary](https://youtu.be/Wb_vD3XZYOA?si=RRxG_rUwXxTf2xnh)
+about it, that even have Brendan Gregg saying "this is like putting javascript into the kernel".
 
 # Kernel space/User space and syscalls.
 
-Before we start talking about eBPF, let's recap what userspace and kernel space. In layman terms, linux execution is 
-divided into 2 big areas,  Kernel Space, that is where all the kernel related processes are executed, and userspace, 
-that is everything else. This means that everything that is related to the operative system is completely isolated from 
+Before we start talking about eBPF, let's recap what userspace and kernel space. In layman terms, linux execution is
+divided into 2 big areas,  Kernel Space, that is where all the kernel related processes are executed, and userspace,
+that is everything else. This means that everything that is related to the operative system is completely isolated from
 things a user might run. This distinction exists for 3 reasons:
 
 1. Security:
@@ -48,7 +48,7 @@ things a user might run. This distinction exists for 3 reasons:
     5. Separating user space and kernel space allows the kernel to have direct access to hardware resources, enabling efficient system-level operations.
     6. User programs can run in their own space without requiring direct hardware access. They communicate with the kernel through system calls, allowing the kernel to manage hardware resources on their behalf.
 
-When the user needs to do something that only the kernel can do (e.g. write a file to disk), the user will call a “system call” or just syscall, this function is a safe boundary between these 2 spaces. 
+When the user needs to do something that only the kernel can do (e.g. write a file to disk), the user will call a “system call” or just syscall, this function is a safe boundary between these 2 spaces.
 
 
 ## Seeing syscall in actions: how does the os write a file to disk.
@@ -57,7 +57,7 @@ A classical interview question is “how does the os do’ something’ ”, one
 
 
 ```
-root@c8c835070254 workshop]# cat ./eBPF/write-to-disk.py 
+root@c8c835070254 workshop]# cat ./eBPF/write-to-disk.py
 #!/usr/bin/env python3
 
 LOGGING_PREFIX= "#"*10
@@ -99,7 +99,7 @@ Lets execute the file using strace, but let’s use tmux so we can navigate the 
 
 ```
 tmux
-strace -o /tmp/strace.out python3 ./eBPF/write-to-disk.py 
+strace -o /tmp/strace.out python3 ./eBPF/write-to-disk.py
 ```
 
 
@@ -109,7 +109,7 @@ open the file with
 ```
 [root@c8c835070254 workshop]# vim /tmp/strace.out
 ```
-Then  type “/MYVAR” and press enter. this will take you to a line that looks like `write(1, "MYFLAG\n", 7)                 = 7` this line corresponds to the line `print("MYFLAG")` on the file we used. This line serves no purpose other than mark where, in all the call stack, we want to start paying attention.  
+Then  type “/MYVAR” and press enter. this will take you to a line that looks like `write(1, "MYFLAG\n", 7)                 = 7` this line corresponds to the line `print("MYFLAG")` on the file we used. This line serves no purpose other than mark where, in all the call stack, we want to start paying attention.
 
 the next 3 lines looks like
 
@@ -119,7 +119,7 @@ write(1, "########## GOING TO ASIGN A VARI"..., 37) = 37
 write(1, "\n", 1)                       = 1
 ```
 
-those clearly correspond to 
+those clearly correspond to
 
 ```python
 print(f"{LOGGING_PREFIX}")
@@ -154,7 +154,7 @@ file_= open(filename, "w")
 print()
 ```
 
-This time is different, between the last 2 writes to file descriptor 1, we see 4 syscalls been executed: 
+This time is different, between the last 2 writes to file descriptor 1, we see 4 syscalls been executed:
 
 
 1. openat, responsible for opening the file, in the correct mode
@@ -167,7 +167,7 @@ This is interesting, because a single call in userspace triggered a bunch of cal
 ```
 write(1, "##########\n", 11)            = 11
 write(1, "########## GOING TO write TO /tm"..., 45) = 45
-write(1, "\n", 1)         
+write(1, "\n", 1)
 ```
 
 
@@ -184,19 +184,22 @@ So lets see the next lines
 write(1, "##########\n", 11)            = 11
 write(1, "########## GOING TO flush /tmp/n"..., 42) = 42
 write(3, "42", 2)                       = 2
-write(1, "\n", 1) 
+write(1, "\n", 1)
 ```
 
 
-we now see a ``write(3, "42", 2)`` between the last 2 write to fd 1, that was triggered by our flush. finally we close the the file with 
+we now see a ``write(3, "42", 2)`` between the last 2 write to fd 1, that was triggered by our flush. finally we close the the file with
 
 
 ```
 write(1, "##########\n", 11)            = 11
 write(1, "########## GOING TO close /tmp/n"..., 42) = 42
 close(3)                                = 0
-write(1, "\n", 1)  
+write(1, "\n", 1)
 ```
 
 
-exercise for the reader, We saw that calling write in python did not translate into a write syscall, why? Is this python, or is there something else going on? How can we know?. see the strace output (the last 10 lines ) of  write-to-disk-force-close.py and write-to-disk-unforce-close.py .
+exercise for the reader, We saw that calling write in python did not translate into a write syscall, why? Is this python, or is there something else going on? How can we know?. see the strace output (the last 10 lines ) of  write-to-disk-force-close.py and write-to-disk-unforce-close.py.
+
+---
+[back to TOC](../README.md)

@@ -329,4 +329,4 @@ And exposure score drops to 4.0. All of these options can be found in the [syste
 ... we could go on, but you get the idea...
 
 ---
-[back to TOC](https://github.com/systemdemo/workshop/blob/main/workshop/README.md)
+[back to TOC](../README.md)

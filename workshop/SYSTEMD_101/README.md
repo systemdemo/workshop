@@ -557,3 +557,6 @@ And as you can see the terminal is stuck waiting for you to send the ctl-C signa
 > Note: `systemd-run --pty bash` and  `systemd-run --shell` are functionally equivalent
 
 > Note: You can run `systemd-run --pty ipython` to start an interactive ipython shell.
+
+---
+[back to TOC](../README.md)

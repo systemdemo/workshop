@@ -238,6 +238,5 @@ Some other fun commands to get a visual view of dependencies and systemd initial
 [~] systemd-analyze critical-chain
 ```
 
-
 ---
-[back to TOC](https://github.com/systemdemo/workshop/blob/main/workshop/README.md)
+[back to TOC](../README.md)

@@ -99,7 +99,7 @@ tracepoint:syscalls:sys_exit_openat /@filename[tid]/{
 Execute it and in the terminal run something like `python -c '1==1'`:
 ```bash
 [root@eth50-1 workshop]# /usr/local/src/workshop/workshop/eBPF/samples/04-openfiles.bt 5378                                                                                                                                    19:31:37 [5/563]
-Attaching 5 probes...                                                                                                                                                                                                                          
+Attaching 5 probes...
 ...
 /usr/lib64/python3.12/encodings/__pycache__/__init__.cpython-31..
 /usr/lib64/python3.12/encodings
@@ -112,9 +112,9 @@ Attaching 5 probes...
 ```
 It's working, but the output is truncated!!! This is because bpftrace limits the size of strings, but we can change that with:
 ```bash
-[root@eth50-1 workshop]# BPFTRACE_MAX_STRLEN=128 /usr/local/src/workshop/workshop/eBPF/samples/04-openfiles.bt 5378                                                                                                                            
-Attaching 5 probes...                                                                                                                                                                                                                          
-/etc/ld.so.cache                                                                                                                                                                                                                               
+[root@eth50-1 workshop]# BPFTRACE_MAX_STRLEN=128 /usr/local/src/workshop/workshop/eBPF/samples/04-openfiles.bt 5378
+Attaching 5 probes...
+/etc/ld.so.cache
 ...
 /usr/lib64/python3.12/encodings/__pycache__/__init__.cpython-312.pyc
 /usr/lib64/python3.12/encodings
@@ -171,7 +171,7 @@ Note on bugs, or don't sue us if this does not work on your system...
 
 1. You can clone and never exit; signals and other things can influence this.
 
-# Building a firewall 
+# Building a firewall
 
 Okay, that was some clickbait if I ever saw any... However, we won't be building an actual firewall here. Instead, we will delve into XDP and explore how to use Python (or any user space program) to manipulate the behavior of an eBPF program. We'll begin with a basic script that captures pings and sends them to user space, then modify it to read a list of IP addresses from a file and subsequently move them to the kernel for blocking purposes.
 
@@ -195,14 +195,14 @@ cd /usr/local/src/workshop/workshop/eBPF/fwll/
 you probably see a bunch of
 
 ```
-Protocol TCP: counter 3                                                                                                                                                                                                                        
-Protocol TCP: counter 4 
+Protocol TCP: counter 3
+Protocol TCP: counter 4
 ```
 
 then on a terminal execute `ping 8.8.8.8` to see
 
 ```commandline
-Protocol ICMP: counter 1,Protocol TCP: counter 12                                                                                                                                                                                              
+Protocol ICMP: counter 1,Protocol TCP: counter 12
 Protocol ICMP: counter 3,Protocol TCP: counter 19
 ```
 
@@ -278,19 +278,19 @@ the important things here are
 
 ## lets pass the actual source and destination
 
-See [bubble_packet.py](fwll/bubble_packet.py)... this scripts will build on lizrice script and 
+See [bubble_packet.py](fwll/bubble_packet.py)... this scripts will build on lizrice script and
 expand on it
 
 the relevant parts are
 
 1. create a `BPF_PERF_OUTPUT` named `events`.
-2. we submit events from the kernel with `events.perf_submit`. 
+2. we submit events from the kernel with `events.perf_submit`.
 3. we register the function `process_event` be called when the kernel submit an event.
 4. we send a custom struct to userspace... userspace pool for event with `b.perf_buffer_poll()`
 
 ## lets block pings based on a file.
 
-See [bubble_packet.py](fwll/filter_packet.py)... this scripts reads from a file on disc called deny, and load 
+See [bubble_packet.py](fwll/filter_packet.py)... this scripts reads from a file on disc called deny, and load
 it in the kernel, then a function will decide to block packages.
 
 
@@ -310,3 +310,6 @@ int filter_packet(struct xdp_md *ctx) {
 4. in python-land (userspace) we read the deny file and load its values into the hash map.
 
 ## a combination of those two can be found in [bubble_packet.py](fwll/fw.py)
+
+---
+[back to TOC](../README.md)
