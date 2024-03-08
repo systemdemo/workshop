@@ -2,6 +2,7 @@
 
 import pathlib
 import subprocess
+from contextlib import suppress
 
 ROOT_DIR = pathlib.Path(__file__).resolve().absolute().parent.parent
 
@@ -36,6 +37,9 @@ for unit in WORKSHOP.glob("**/systemd.units/*"):
     dst = SYSTEMD_CONF / unit.name
     if dst.exists():
         continue
+    with suppress():
+        dst.unlink()
+    
     print(f"{dst} -> {unit}")
     dst.symlink_to(unit)
 
