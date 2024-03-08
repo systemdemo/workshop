@@ -175,7 +175,7 @@ fi
 # but i should probably fix this
 kernel_version=$(uname -r)
 build_dir="/usr/lib/modules/${kernel_version}/build"
-if [ -d $build_dir ] && [ -z "$(ls -A ${build_dir})" ]; then
+if [ -e $build_dir ] && [ -z "$(ls -A ${build_dir})" ]; then
     rm -rf "${build_dir}"
 fi
 if [ ! -e "${build_dir}/vmlinux.h" ]; then

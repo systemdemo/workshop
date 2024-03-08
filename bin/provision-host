@@ -39,7 +39,7 @@ for unit in WORKSHOP.glob("**/systemd.units/*"):
         continue
     with suppress():
         dst.unlink()
-    
+
     print(f"{dst} -> {unit}")
     dst.symlink_to(unit)
 

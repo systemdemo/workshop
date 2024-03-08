@@ -660,29 +660,33 @@ def build(from_image, build_label):
         sys.stdout.flush()
         sleep(1)
     print()
+    try:
     # ssh into the host
-    subprocess.run(
-        [
-            *("sshpass", "-p", PASSWORD, "ssh"),
-            *("-o", "StrictHostKeyChecking=no"),
-            *("-o", "PasswordAuthentication=yes"),
-            *("-o", "PubkeyAuthentication=no"),
-            f"root@{new_linode.ipv4[0]}",
-            PROVISION_SCRIPT,
-        ],
-        check=True,
-    )
-    disk = [*new_linode.disks][0]
-    image_label = "scale_2024_" + datetime.today().strftime("%Y.%m.%d.%H%M")
-    # maybe add some tags
-    new_image = client.images.create(disk, label=image_label)
+        subprocess.run(
+            [
+                *("sshpass", "-p", PASSWORD, "ssh"),
+                *("-o", "StrictHostKeyChecking=no"),
+                *("-o", "PasswordAuthentication=yes"),
+                *("-o", "PubkeyAuthentication=no"),
+                f"root@{new_linode.ipv4[0]}",
+                PROVISION_SCRIPT,
+            ],
+            check=True,
+        )
+        disk = [*new_linode.disks][0]
+        image_label = "scale_2024_" + datetime.today().strftime("%Y.%m.%d.%H%M")
+        # maybe add some tags
+        new_image = client.images.create(disk, label=image_label)
 
-    while (
-        new_image := next(client.images(linode_api4.Image.label == new_image.label))
-    ).status == "creating":
-        print("still creating...")
-        sleep(1)
-    print(f"new image {new_image.label} has status {new_image.status}")
+        while (
+            new_image := next(client.images(linode_api4.Image.label == new_image.label))
+        ).status == "creating":
+            print("still creating...")
+            sleep(1)
+        print(f"new image {new_image.label} has status {new_image.status}")
+    finally:
+        print("deleting host")
+        new_linode.delete()
 
     # now we should turn the machine off and create the image
 
