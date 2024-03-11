@@ -684,6 +684,20 @@ def build(from_image, build_label):
             print("still creating...")
             sleep(1)
         print(f"new image {new_image.label} has status {new_image.status}")
+    except Exception:
+        print("provision failed, ssh into the host")
+        subprocess.run(
+            [
+                *("sshpass", "-p", PASSWORD, "ssh"),
+                *("-o", "StrictHostKeyChecking=no"),
+                *("-o", "PasswordAuthentication=yes"),
+                *("-o", "PubkeyAuthentication=no"),
+                f"root@{new_linode.ipv4[0]}",
+                PROVISION_SCRIPT,
+            ],
+            check=True,
+        )
+
     finally:
         print("deleting host")
         new_linode.delete()
@@ -825,6 +839,7 @@ def deploy_image(image_id, n, name_prefix):
                     + str(size)
                 ),
                 private_ip=False,
+                tags=["demo-machine"],
                 booted=True,
                 root_pass="systemd-SCaLE-2024",
                 backups_enabled=False,

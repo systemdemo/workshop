@@ -61,6 +61,9 @@ sudo dnf install -y git\
     g++
 
 
+rm -f /usr/lib/systemd/system/service.d/10-timeout-abort.conf
+
+
 if [[ -e /usr/lib/systemd/system/vboxadd.service ]]; then
     echo "enabling vbox special services"
     sudo systemctl enable vboxadd.service vboxadd-service.service
