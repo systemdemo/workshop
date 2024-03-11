@@ -15,18 +15,6 @@ PYSTEMD_SRC="/opt/pystemd"
 PYSTEMD_REPO="https://github.com/systemd/pystemd"
 
 
-# this hack over here is for linode's weird kernel
-# but i should probably fix this
-kernel_version=$(uname -r)
-build_dir="/usr/lib/modules/${kernel_version}/build"
-if [ -e $build_dir ] && [ -z "$(ls -A ${build_dir})" ]; then
-    rm -rf "${build_dir}"
-fi
-
-if [ ! -e "${build_dir}/vmlinux.h" ]; then
-  highest_dir=$(find /usr/src/kernels/* -type f -name vmlinux.h -exec dirname {} \; | sort -r | head -n 1)
-  ln -s "$highest_dir" "$build_dir"
-fi
 
 sudo mkdir -p "$DEBIAN_ROOT" "$PYSTEMD_SRC"
 sudo dnf install -y git\
@@ -74,6 +62,8 @@ sudo dnf install -y git\
     libffi-devel \
     g++
 
+# make sure we have the latest kernel and the latest kernel modules
+sudo dnf upgrade -y kernel-core kernel-devel
 
 rm -f /usr/lib/systemd/system/service.d/10-timeout-abort.conf
 
@@ -190,6 +180,20 @@ if [ ! -f "$cpython_bin" ]; then
 fi
 
 
+# this hack over here is for linode's weird kernel
+# but i should probably fix this
+kernel_version=$(uname -r)
+build_dir="/usr/lib/modules/${kernel_version}/build"
+if [ -h $build_dir ] && [ ! -e $build_dir ]; then
+    rm -rf "${build_dir}"
+fi
+if [ -e $build_dir ] && [ -z "$(ls -A ${build_dir})" ]; then
+    rm -rf "${build_dir}"
+fi
+if [ ! -e "${build_dir}/vmlinux.h" ]; then
+  highest_dir=$(find /usr/src/kernels/* -type f -name vmlinux.h -exec dirname {} \; | sort -r | head -n 1)
+  ln -s "$highest_dir" "$build_dir"
+fi
 
 # cleanup root 
 sudo dnf clean all 
