@@ -693,7 +693,6 @@ def build(from_image, build_label):
                 *("-o", "PasswordAuthentication=yes"),
                 *("-o", "PubkeyAuthentication=no"),
                 f"root@{new_linode.ipv4[0]}",
-                PROVISION_SCRIPT,
             ],
             check=True,
         )

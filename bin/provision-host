@@ -35,9 +35,9 @@ if SELINUX_CONFIG.exists():
 
 for unit in WORKSHOP.glob("**/systemd.units/*"):
     dst = SYSTEMD_CONF / unit.name
-    if dst.exists(Exception):
+    if dst.exists():
         continue
-    with suppress():
+    with suppress(Exception):
         dst.unlink()
 
     print(f"{dst} -> {unit}")
