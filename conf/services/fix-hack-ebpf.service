@@ -1,0 +1,9 @@
+[Unit]
+Description="Fix" missing build dir in /lib/modules/<kernel>
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /usr/local/src/workshop/bin/fix-hack-ebpf
+
+[Install]
+WantedBy=default.target

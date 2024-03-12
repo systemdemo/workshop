@@ -21,6 +21,7 @@ SYSTEMD_ENVS_SRC = [
     WORKSHOP_LOCAL_ENVS := CONF / "workshop-env.local.conf",
 ]
 
+
 BASHRC_LOCAL = CONF / "bashrc.local.conf"
 
 SELINUX_CONFIG = CONF / "workshop-selinux-config"
@@ -33,7 +34,7 @@ if SELINUX_CONFIG.exists():
     pathlib.Path("/etc/selinux/config").write_text(SELINUX_CONFIG.read_text())
     subprocess.run(["setenforce", "Permissive"])
 
-for unit in WORKSHOP.glob("**/systemd.units/*"):
+for unit in [*WORKSHOP.glob("**/systemd.units/*"), *CONF.glob("services/*.service")]:
     dst = SYSTEMD_CONF / unit.name
     if dst.exists():
         continue
@@ -42,6 +43,9 @@ for unit in WORKSHOP.glob("**/systemd.units/*"):
 
     print(f"{dst} -> {unit}")
     dst.symlink_to(unit)
+
+for unit in CONF.glob("services/*.service"):
+    subprocess.run(["systemctl", "enable", unit.name])
 
 
 for conf in SYSTEMD_ENVS_SRC:
