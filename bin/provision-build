@@ -14,8 +14,6 @@ DEBIAN_ROOT="/opt/debian"
 PYSTEMD_SRC="/opt/pystemd"
 PYSTEMD_REPO="https://github.com/systemd/pystemd"
 
-
-
 sudo mkdir -p "$DEBIAN_ROOT" "$PYSTEMD_SRC"
 sudo dnf install -y git\
     kernel-core\
@@ -183,17 +181,36 @@ fi
 # this hack over here is for linode's weird kernel
 # but i should probably fix this
 kernel_version=$(uname -r)
-build_dir="/usr/lib/modules/${kernel_version}/build"
-if [ -h $build_dir ] && [ ! -e $build_dir ]; then
+highest_dir=$(find /usr/src/kernels/* -type f -name vmlinux.h -exec dirname {} \; | sort -r | head -n 1)
+
+# Loop through each directory in /lib/modules/
+for dir in /lib/modules/*; do
+  # Check if there is a "build" file or directory inside the directory
+  build_dir="${dir}/build"
+  kernel_version=$(basename "$dir")
+  dst_dir="/usr/src/kernels/{$kernel_version}"
+
+  if [ -h $build_dir ] && [ ! -e $build_dir ]; then
+    # check if build dir is symlink that point to nothing, delete the symlink
     rm -rf "${build_dir}"
-fi
-if [ -e $build_dir ] && [ -z "$(ls -A ${build_dir})" ]; then
+  fi
+  if [ -e $build_dir ] && [ -z "$(ls -A ${build_dir})" ]; then
+    # checks if $build_dir exists but points to a empty something
     rm -rf "${build_dir}"
-fi
-if [ ! -e "${build_dir}/vmlinux.h" ]; then
-  highest_dir=$(find /usr/src/kernels/* -type f -name vmlinux.h -exec dirname {} \; | sort -r | head -n 1)
-  ln -s "$highest_dir" "$build_dir"
-fi
+  fi
+
+  if [ ! -e "$build_dir" ]; then
+    if [ -e "$dst_dir"  ]; then
+      ln -s "$dst_dir" "$build_dir"
+    else
+      ln -s "$highest_dir" "$build_dir"
+    fi
+  fi
+
+done
+
+# The slides are here:
+# https://docs.google.com/presentation/d/1tLomGSIBcfS2FI-3QyDoPBqM_RTcT4KsVJB0y5nVkrc/edit#slide=id.g1fd3f2d1519_0_0
 
 # cleanup root 
 sudo dnf clean all 

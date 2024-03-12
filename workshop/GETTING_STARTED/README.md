@@ -1,6 +1,5 @@
 # Getting Started
 
-The slides are here: https://docs.google.com/presentation/d/1tLomGSIBcfS2FI-3QyDoPBqM_RTcT4KsVJB0y5nVkrc/edit#slide=id.g1fd3f2d1519_0_0
 
 ## Initial Steps
 
