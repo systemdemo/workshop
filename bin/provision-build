@@ -99,7 +99,7 @@ if [ -f ~/.bashrc ]; then
 fi
 
 # auto cd into workshop directory
-test -e /opt/workshop/ && cd /opt/workshop/
+test -e /usr/local/src/workshop/workshop && cd /usr/local/src/workshop/workshop
 
 # lets move to root
 exec sudo su -
@@ -109,6 +109,8 @@ fi
 
 cat <<EOF > /root/.bash_profile
 # .bash_profile
+
+test -e /usr/local/src/workshop/workshop && cd /usr/local/src/workshop/workshop
 
 # lets clean failed units
 systemctl reset-failed

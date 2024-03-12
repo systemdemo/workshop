@@ -661,7 +661,7 @@ def build(from_image, build_label):
         sleep(1)
     print()
     try:
-    # ssh into the host
+        # ssh into the host
         subprocess.run(
             [
                 *("sshpass", "-p", PASSWORD, "ssh"),

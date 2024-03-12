@@ -14,6 +14,18 @@ PROFILE_D = pathlib.Path("/etc/profile.d/")
 
 WORKSHOP = ROOT_DIR / "workshop"
 CONF = ROOT_DIR / "conf"
+BIN = ROOT_DIR / "bin"
+
+OPT = pathlib.Path("/opt")
+
+# set symlinks if they dont exists
+
+for mpath in [WORKSHOP, CONF, BIN]:
+    dst = OPT / mpath.name
+    if dst.exists():
+        continue
+    print(f"{dst} -> {mpath}")
+    dst.symlink_to(mpath)
 
 
 SYSTEMD_ENVS_SRC = [
