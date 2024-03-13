@@ -1,0 +1,8 @@
+[Unit]
+Description=A notify service that decide not to notify
+
+[Service]
+Type=notify
+TimeoutStartSec=3s
+ExecStart=/usr/local/src/workshop/workshop/SYSTEMD_FOR_DEVELOPERS/notify-shell.py
+

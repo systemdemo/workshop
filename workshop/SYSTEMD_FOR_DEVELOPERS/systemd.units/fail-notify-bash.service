@@ -1,0 +1,8 @@
+[Unit]
+Description=A notify service that tries to bash notify, but fails
+
+[Service]
+Type=notify
+User=nobody
+TimeoutStartSec=3s
+ExecStart=/bin/bash /usr/local/src/workshop/workshop/SYSTEMD_FOR_DEVELOPERS/notify-shell.sh

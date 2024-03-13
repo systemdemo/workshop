@@ -1,0 +1,7 @@
+[Unit]
+Description=A notify service that tries to bash notify, as root
+
+[Service]
+Type=notify
+TimeoutStartSec=3s
+ExecStart=/bin/bash /usr/local/src/workshop/workshop/SYSTEMD_FOR_DEVELOPERS/notify-shell.sh
