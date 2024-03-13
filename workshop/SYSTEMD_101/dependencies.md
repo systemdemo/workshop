@@ -6,9 +6,9 @@ In the days of SysVinit, services were started sequentially at boot based on num
 
 ## Ordering
 
-You can order units in 2 ways: with `Before=` or `After=`. Let's say we have a u1.service with `Before=u2.service`. This tells systemd that when we are starting u1.service and u2.service at the same time, we order u1 before u2. We can also do this the other way with `After=` if we have a u2.service with `After=u1.service`.
+You can order units in 2 ways: with `Before=` or `After=`. Let's say we have a dinosaur.service with `Before=human.service`. This tells systemd that when we are starting dinosaur.service and human.service at the same time, we order dinosaur.service before human.service. We can also do this the other way with `After=` if we have a human.service with `After=dinosaur.service`.
 
-Let's try it out. We provided 2 units: dinosaur.service and human.service. These are the contents:
+Let's try it out. We provided dinosaur.service and human.service. These are the contents:
 
 ```
 [~] systemctl cat dinosaur.service
@@ -39,40 +39,9 @@ You should see that the active enter timestamp for dinosaur.service comes before
 
 ## Dependencies
 
-The basic unit dependency properties in systemd are `Wants=` and `Requires=`.
+The basic unit dependency properties in systemd are `Requires=` and `Wants=`.
 
-Let's say we have a u1.service with `Wants=u2.service`. This tells systemd that when we are starting u1.service, we will also start u2.service. However whether u2.service starts successfully or not does not affect whether u1.service will successfully start. If `Before=` or `After=` are not provided, the units will start at roughly the same time. You will want to use `Wants=` for most dependencies.
-
-Let's see this in action. We provided 2 units: dog.service and bone.service. Here are the contents:
-
-```
-[ ~] systemctl cat dog.service
-# /etc/systemd/system/dog.service
-[Unit]
-Wants=bone.service
-
-[Service]
-Type=oneshot
-ExecStart=echo woof
-
-[~] systemctl cat bone.service
-# /etc/systemd/system/bone.service
-[Service]
-ExecStart=/bin/false
-```
-
-So dog.service *wants* bone.service. However, we are making bone.service return /bin/false so that the service will be considered "failed". We will demonstrate that this does not block dog.service from running successfully:
-
-```
-[~] systemctl start dog.service
-[~] systemctl status dog.service
-[~] systemctl status bone.service
-```
-
-Notice how starting dog.service also started bone.service. Also notice how dog.service successfully ran and echoed "woof", while bone.service failed.
-
-
-`Requires=` is the stricter version of `Wants=` when combined with `After=`. With `Wants=` it does not matter if the wanted dependency starts successfully or not. But with `Requires=` and `After=`, if the required dependency fails to start, then our own unit will also fail to start.
+Let's say we have a life.service with `Requires=water.service`. This tells systemd that when we are starting life.service, we will also start water.service. If water.service fails to start, life.service will also fail to start. If `Before=` or `After=` are not provided, the units will start at roughly the same time.
 
 We provided life.service and water.service for you to try it out. These are the contents:
 
@@ -100,26 +69,61 @@ Let's see what happens when you try to start life.service:
 [~] systemctl status water.service
 ```
 
-life.service... ran? Successfully??? Why!? We should see that water.service failed, but life.service ran successfully. We should have expected to life.service to fail!
+life.service... ran? Successfully??? Why!? We should see that water.service failed, but life.service ran successfully. We expected to life.service to fail!
 
 
-The devil is in the details: the wording is very clear that `Wants=` and `Requires=` only refers to *starting* the unit. If you look closely at the logs for water.service, you will see that it did indeed *start* successfully, but the main process returned non-zero (failed). We can rework water.service to make it "fail to start" like so:
+The devil is in the details: the wording is very clear that `Requires=` only refers to *starting* the unit. If you look closely at the logs for water.service, you will see that it did indeed *start* successfully, but the main process returned non-zero (failed). We can rework water.service to make it "fail to start" like so:
 
 ```
 [~] systemctl edit water.service
 
 # Add the following lines, save and exit
 [Service]
-Type=exec
+Type=notify
 ```
 
-What this does is tell systemd to wait until we exec into the main service binary before starting other units. In the default type, `Type=simple`, systemd only waits for the unit for fork before considering the unit "started". If you try it again, we should get a dependency error:
+What this does is tell systemd to only consider the unit started when your unit sends the `READY=1` message via `sd_notify`. With `Type=simple`, systemd only waits for the unit for fork before considering the unit "started". If you try it again, we should get a dependency error:
 
 ```
 [~] systemctl start life.service
 [~] systemctl status life.service
 [~] systemctl status water.service
 ```
+
+> Exercise: Keeping Type=notify on water.service, modify the ExecStart= for water.service to send a READY=1 message. Hint: use systemd-notify.
+
+
+`Wants=` is a weaker dependency. With `Wants=` it does not matter if the wanted dependency starts successfully or not. Most of the time, `Wants=` dependency is what you *want* to use!
+
+Let's see this in action. We provided 2 units: dog.service and bone.service. dog.service wants bone.service. Here are the contents:
+
+```
+[ ~] systemctl cat dog.service
+# /etc/systemd/system/dog.service
+[Unit]
+Wants=bone.service
+
+[Service]
+Type=oneshot
+ExecStart=echo woof
+
+[~] systemctl cat bone.service
+# /etc/systemd/system/bone.service
+[Service]
+Type=notify
+ExecStart=/bin/false
+```
+
+So dog.service *wants* bone.service. However, bone.service is using `Type=notify` and `ExecStart=/bin/false` as in the previous example to force bone.service to fail to start. There are no ordering dependencies so they will start roughly together. We will demonstrate that this does not block dog.service from running successfully:
+
+```
+[~] systemctl start dog.service
+[~] systemctl status dog.service
+[~] systemctl status bone.service
+```
+
+Notice how starting dog.service also started bone.service. Also notice how dog.service successfully ran and echoed "woof", while bone.service failed.
+
 
 ## Install
 
@@ -219,7 +223,6 @@ Now enable it (remember that unless you do this, the service will not start with
 ```
 
 Reboot the machine:
-s
 ```
 [~] systemctl reboot
 ```
@@ -235,7 +238,7 @@ Some other fun commands to get a visual view of dependencies and systemd initial
 [~] systemd-analyze dot <unit name>
 
 # This one outputs and SVG of the initialization sequence.
-[~] systemd-analyze critical-chain
+[~] systemd-analyze plot
 ```
 
 ---
