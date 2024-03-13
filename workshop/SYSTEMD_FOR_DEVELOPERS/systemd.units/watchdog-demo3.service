@@ -1,0 +1,8 @@
+[Unit]
+Description=
+
+[Service]
+Type=notify
+WatchdogSec=3s
+StandardOutput=journal
+ExecStart=/usr/local/src/workshop/workshop/SYSTEMD_FOR_DEVELOPERS/wd3.py

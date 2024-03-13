@@ -251,3 +251,13 @@ systemctl cat not-fail-notify-bash.service
 ```
 
 and notice `NotifyAccess=all`.
+
+
+# extend startup time
+
+So far our unit is expected to start in 3 seconds, that seems like a good default, 
+but you can also change that during startup... 
+
+```
+systemctl start watchdog-demo4.service
+```
