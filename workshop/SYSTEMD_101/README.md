@@ -281,7 +281,7 @@ In order to display the content of a systemd unit file (including all overrides)
 Description=My first systemd service
 
 [Service]
-ExecStart=/usr/bin/python /opt/bin/service-whoami.py
+ExecStart=/usr/bin/python /usr/local/src/workshop/bin/service-whoami.py
 Restart=always
 User=vagrant
 
@@ -427,15 +427,15 @@ Another incredibly useful feature, is the ability to create units "on the fly". 
 To get started with it execute:
 
 ```
-[~]# systemd-run /opt/bin/service-whoami.py
+[~]# systemd-run /usr/local/src/workshop/bin/service-whoami.py
 Running as unit: run-r062113ac9377474ca5eaff8c7f5ca6c0.service
 ```
 
-And that's it! Systemd will take care of creating and starting a service for you. Under the hood it creates an ephemeral unit that does just what you told it to: it executes `/opt/bin/service-whoami.py`. The call returns you the name of the unit `run-r062113ac9377474ca5eaff8c7f5ca6c0.service`. Go ahead and query the status of the unit:
+And that's it! Systemd will take care of creating and starting a service for you. Under the hood it creates an ephemeral unit that does just what you told it to: it executes `service-whoami.py`. The call returns you the name of the unit `run-r062113ac9377474ca5eaff8c7f5ca6c0.service`. Go ahead and query the status of the unit:
 
 ```yaml
 [root@eth50-1 ~]# systemctl status run-r062113ac9377474ca5eaff8c7f5ca6c0.service
-● run-r062113ac9377474ca5eaff8c7f5ca6c0.service - /usr/bin/python /opt/bin/service-whoami.py
+● run-r062113ac9377474ca5eaff8c7f5ca6c0.service - /usr/bin/python /usr/local/src/workshop/bin/service-whoami.py
      Loaded: loaded (/run/systemd/transient/run-r062113ac9377474ca5eaff8c7f5ca6c0.service; transient)
   Transient: yes
      Active: active (running) since Wed 2023-02-15 16:54:50 UTC; 1min 53s ago
@@ -464,14 +464,13 @@ Let's inspect the contents of the unit file created:
 # /run/systemd/transient/run-r062113ac9377474ca5eaff8c7f5ca6c0.service
 # This is a transient unit file, created programmatically via the systemd API. Do not edit.
 [Unit]
-Description=/opt/bin/service-whoami.py
+Description=service-whoami.py
 
 [Service]
 ExecStart=
-ExecStart=/opt/bin/service-whoami.py
+ExecStart=/usr/local/src/workshop/bin/service-whoami.py
 
 ```
-
 
 ## Run an interactive shell
 
@@ -513,7 +512,7 @@ Now you can see and execute commands like you are inside the service. Think of i
 Another interesting invocation is to use `systemd-run -p` to set properties, and `--pty` to connect stdin, stdout, and stderr back to your shell:
 
 ```
-[root@eth50-1 workshop]# systemd-run -p DynamicUser=true --pty /opt/bin/service-whoami.py
+[root@eth50-1 workshop]# systemd-run -p DynamicUser=true --pty /usr/local/src/workshop/bin/service-whoami.py
 Running as unit: run-u517.service
 Press ^] three times within 1s to disconnect TTY.
 

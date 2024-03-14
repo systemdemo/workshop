@@ -8,7 +8,7 @@ By understanding the fundamentals of systemd and its APIs, developers can gain b
 
 # D-Bus
 
-From Lennart Poettering's [blog post](https://0pointer.net/blog/the-new-sd-bus-api-of-systemd.html) about D-Bus in systemd: 
+From Lennart Poettering's [blog post](https://0pointer.net/blog/the-new-sd-bus-api-of-systemd.html) about D-Bus in systemd:
 
 >  it's a powerful, generic IPC system for Linux and other operating systems. It knows concepts like buses, objects, interfaces, methods, signals, properties. It provides you with fine-grained access control, a rich type system, discoverability, introspection, monitoring, reliable multicasting, service activation, file descriptor passing, and more.
 
@@ -26,34 +26,34 @@ open a terminal and type:
 [~] busctl
 ```
 ```
-NAME                             PID PROCESS         USER            CONNECTION    UNIT                     SESSION>                                          
-:1.0                             610 systemd-oomd    systemd-oom     :1.0          systemd-oomd.service     -      >                                          
-:1.1                             611 systemd-resolve systemd-resolve :1.1          systemd-resolved.service -      >                                          
-:1.13                            895 systemd         vagrant         :1.13         user@1000.service        -      >                                          
-:1.2                               1 systemd         root            :1.2          init.scope               -      >                                          
-:1.3                             623 systemd-logind  root            :1.3          systemd-logind.service   -      >                                          
-:1.4                             632 dbus-broker-lau root            :1.4          dbus-broker.service      -      >                                          
-:1.5                             666 NetworkManager  root            :1.5          NetworkManager.service   -      >                                          
-:1.6277                        17445 busctl          root            :1.6277       session-3.scope          3      >                                          
-:1.9                             831 VBoxService     root            :1.9          vboxadd-service.service  -      >                                          
-org.bluez                          - -               -               (activatable) -                        -      >                                          
-org.freedesktop.DBus               1 systemd         root            -             init.scope               -      >                                          
-org.freedesktop.NetworkManager   666 NetworkManager  root            :1.5          NetworkManager.service   -      >                                          
-org.freedesktop.PolicyKit1         - -               -               (activatable) -                        -      >                                          
-org.freedesktop.UDisks2            - -               -               (activatable) -                        -      >                                          
-org.freedesktop.fwupd              - -               -               (activatable) -                        -      >                                          
-org.freedesktop.home1              - -               -               (activatable) -                        -      >                                          
-org.freedesktop.hostname1          - -               -               (activatable) -                        -      >                                          
-org.freedesktop.locale1            - -               -               (activatable) -                        -      >                                          
-org.freedesktop.login1           623 systemd-logind  root            :1.3          systemd-logind.service   -      >                                          
-org.freedesktop.network1           - -               -               (activatable) -                        -      >                                          
-org.freedesktop.nm_dispatcher      - -               -               (activatable) -                        -      >                                          
-org.freedesktop.nm_priv_helper     - -               -               (activatable) -                        -      >                                          
-org.freedesktop.oom1             610 systemd-oomd    systemd-oom     :1.0          systemd-oomd.service     -      >                                          
-org.freedesktop.portable1          - -               -               (activatable) -                        -      >                                          
-org.freedesktop.resolve1         611 systemd-resolve systemd-resolve :1.1          systemd-resolved.service -      >                                          
-org.freedesktop.systemd1           1 systemd         root            :1.2          init.scope               -      >                                          
-org.freedesktop.timedate1          - -               -               (activatable) -                        -      >                                          
+NAME                             PID PROCESS         USER            CONNECTION    UNIT                     SESSION>
+:1.0                             610 systemd-oomd    systemd-oom     :1.0          systemd-oomd.service     -      >
+:1.1                             611 systemd-resolve systemd-resolve :1.1          systemd-resolved.service -      >
+:1.13                            895 systemd         vagrant         :1.13         user@1000.service        -      >
+:1.2                               1 systemd         root            :1.2          init.scope               -      >
+:1.3                             623 systemd-logind  root            :1.3          systemd-logind.service   -      >
+:1.4                             632 dbus-broker-lau root            :1.4          dbus-broker.service      -      >
+:1.5                             666 NetworkManager  root            :1.5          NetworkManager.service   -      >
+:1.6277                        17445 busctl          root            :1.6277       session-3.scope          3      >
+:1.9                             831 VBoxService     root            :1.9          vboxadd-service.service  -      >
+org.bluez                          - -               -               (activatable) -                        -      >
+org.freedesktop.DBus               1 systemd         root            -             init.scope               -      >
+org.freedesktop.NetworkManager   666 NetworkManager  root            :1.5          NetworkManager.service   -      >
+org.freedesktop.PolicyKit1         - -               -               (activatable) -                        -      >
+org.freedesktop.UDisks2            - -               -               (activatable) -                        -      >
+org.freedesktop.fwupd              - -               -               (activatable) -                        -      >
+org.freedesktop.home1              - -               -               (activatable) -                        -      >
+org.freedesktop.hostname1          - -               -               (activatable) -                        -      >
+org.freedesktop.locale1            - -               -               (activatable) -                        -      >
+org.freedesktop.login1           623 systemd-logind  root            :1.3          systemd-logind.service   -      >
+org.freedesktop.network1           - -               -               (activatable) -                        -      >
+org.freedesktop.nm_dispatcher      - -               -               (activatable) -                        -      >
+org.freedesktop.nm_priv_helper     - -               -               (activatable) -                        -      >
+org.freedesktop.oom1             610 systemd-oomd    systemd-oom     :1.0          systemd-oomd.service     -      >
+org.freedesktop.portable1          - -               -               (activatable) -                        -      >
+org.freedesktop.resolve1         611 systemd-resolve systemd-resolve :1.1          systemd-resolved.service -      >
+org.freedesktop.systemd1           1 systemd         root            :1.2          init.scope               -      >
+org.freedesktop.timedate1          - -               -               (activatable) -                        -      >
 org.freedesktop.timesync1          - -               -               (activatable) -                        -      >
 ```
 
@@ -134,7 +134,7 @@ org.freedesktop.systemd1.Unit       interface -               -                 
 .ResetFailed                        method    -               -                                        -
 .Restart                            method    s               o                                        -
 .Start                              method    s               o                                        -
-.Stop                               method    s               o                                                                           
+.Stop                               method    s               o
 .ActiveEnterTimestamp               property  t               1677186025560576                         emits-change
 .ActiveEnterTimestampMonotonic      property  t               70514710280                              emits-change
 .ActiveExitTimestamp                property  t               0                                        emits-change
@@ -151,7 +151,7 @@ This view is actually quite interesting; it gives you a full overview of what th
 There are a few things to explain here, but before we do, let's get the `MainPID` of this unit (if it's running) in a couple of different ways, and let's explain each.
 
 ```bash
-# gets the MainPID directly by using `get-property` 
+# gets the MainPID directly by using `get-property`
 busctl get-property  org.freedesktop.systemd1 /org/freedesktop/systemd1/unit/myfirstservice_2eservice  org.freedesktop.systemd1.Service MainPID
 ```
 ```
@@ -159,7 +159,7 @@ u 17822
 ```
 
 ```bash
-# gets the MainPID by calling the `Get` method in the org.`freedesktop.DBus.Properties` interface 
+# gets the MainPID by calling the `Get` method in the org.`freedesktop.DBus.Properties` interface
 busctl call  org.freedesktop.systemd1 /org/freedesktop/systemd1/unit/myfirstservice_2eservice  org.freedesktop.DBus.Properties  Get ss org.freedesktop.systemd1.Service MainPID
 ```
 ```
@@ -170,7 +170,7 @@ Both of these commands retrieve the `MainPID` property of the service unit `myfi
 
 * The first command, `busctl get-property org.freedesktop.systemd1 /org/freedesktop/systemd1/unit/myfirstservice_2eservice org.freedesktop.systemd1.Service MainPID`, does it by retrieving the value of the MainPID property directly from the org.freedesktop.systemd1 service using the org.freedesktop.systemd1.Service interface for the myfirstservice.service unit. This command does not require any additional parameters and returns the value of MainPID property as an integer.
 
-* The second command, `busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1/unit/myfirstservice_2eservice org.freedesktop.DBus.Properties Get ss org.freedesktop.systemd1.Service MainPID`, also uses the `busctl` tool to retrieve the `MainPID` property of the `myfirstservice.service` unit. However, it does it indirectly, by calling the method `Get` implemented in the interface `org.freedesktop.DBus.Properties`, and passing the interface and method we want to get as arguments. This command returns the value of `MainPID` as a variant type, and we need to specify that we want it returned as an integer. 
+* The second command, `busctl call org.freedesktop.systemd1 /org/freedesktop/systemd1/unit/myfirstservice_2eservice org.freedesktop.DBus.Properties Get ss org.freedesktop.systemd1.Service MainPID`, also uses the `busctl` tool to retrieve the `MainPID` property of the `myfirstservice.service` unit. However, it does it indirectly, by calling the method `Get` implemented in the interface `org.freedesktop.DBus.Properties`, and passing the interface and method we want to get as arguments. This command returns the value of `MainPID` as a variant type, and we need to specify that we want it returned as an integer.
 
 
 
@@ -240,14 +240,14 @@ All of this looks great, but it seems kind of like arcane magic. Where to start?
 Lets see one. `org.freedesktop.DBus.Introspectable`
 
 ```
-busctl call  org.freedesktop.systemd1 /org/freedesktop/systemd1/unit/myfirstservice_2eservice  org.freedesktop.DBus.Introspectable Introspect | xq 
+busctl call  org.freedesktop.systemd1 /org/freedesktop/systemd1/unit/myfirstservice_2eservice  org.freedesktop.DBus.Introspectable Introspect | xq
 ```
 
 You can probably see near the end
 
 ```xml
-<method name="\&quot;Clean\&quot;">\n   
-      <arg type="\&quot;as\&quot;" name="\&quot;mask\&quot;" direction="\&quot;in\&quot;/"/>\n  </method>\n    
+<method name="\&quot;Clean\&quot;">\n
+      <arg type="\&quot;as\&quot;" name="\&quot;mask\&quot;" direction="\&quot;in\&quot;/"/>\n  </method>\n
 ```
 
 There is method call Clean. This is the building block of interacting with systemd programatically.
@@ -272,7 +272,7 @@ busctl capture  org.freedesktop.systemd1 | tshark -r - -Y 'dbus.path ~ "myfirsts
 
 Then restart myfirstservice with `systemctl start myfirstservice` , The -Y is a pcap capture filter for [D-Bus](https://www.wireshark.org/docs/dfref/d/dbus.html) that just capture changes to `myfirstservice_2eservice`, try removing the filter and reruning tshark.
 
-Now, if you have wireshark installed on your laptop, you can store the output in a `.pcap` file and inspect it in your laptop 
+Now, if you have wireshark installed on your laptop, you can store the output in a `.pcap` file and inspect it in your laptop
 
 
 ```
@@ -308,7 +308,7 @@ Go ahead and import pystemd. Please notice that this shell already has pystemd i
 In [1]: import pystemd
 ```
 
-Now lets load the `MainPID`, using `pystemd.base.SDObject`: 
+Now lets load the `MainPID`, using `pystemd.base.SDObject`:
 
 ```
 In [2]: service_path = pystemd.dbuslib.path_encode(b"/org/freedesktop/systemd1/unit", b"myfirstservice.service")
@@ -350,7 +350,7 @@ Or using a contextmanager
 ```python
 In [11]: with pystemd.base.SDObject("org.freedesktop.systemd1", service_path, _autoload=True) as sdobject:
     ...:     print(sdobject.Service.MainPID)
-    ...: 
+    ...:
 17987
 ```
 
@@ -378,7 +378,7 @@ Other interfaces are not lost, but they are just not directly available, you can
 
 ```python
 In [23]: sdobject._interfaces
-Out[23]: 
+Out[23]:
 {'org.freedesktop.DBus.Peer': <b'org.freedesktop.DBus.Peer' of /org/freedesktop/systemd1/unit/myfirstservice_2eservice>,
  'org.freedesktop.DBus.Introspectable': <b'org.freedesktop.DBus.Introspectable' of /org/freedesktop/systemd1/unit/myfirstservice_2eservice>,
  'org.freedesktop.DBus.Properties': <b'org.freedesktop.DBus.Properties' of /org/freedesktop/systemd1/unit/myfirstservice_2eservice>,
@@ -391,7 +391,7 @@ Out[24]: b'6768d054190f4e778a3ae268f1acfdbd'
 
 ## Specific unit files as Unit.
 
-Well chances are that you will Interact with units a lot, when we created pystemd, we needed a way to interact with the service manager programmatically, so we created 2 base helpers, [`pystemd.systemd1.Unit`](https://github.com/systemd/pystemd/blob/main/pystemd/systemd1/unit.py) and [`pystemd.systemd1.Manager`](https://github.com/systemd/pystemd/blob/main/pystemd/systemd1/manager.py)… lets explore them a bit  
+Well chances are that you will Interact with units a lot, when we created pystemd, we needed a way to interact with the service manager programmatically, so we created 2 base helpers, [`pystemd.systemd1.Unit`](https://github.com/systemd/pystemd/blob/main/pystemd/systemd1/unit.py) and [`pystemd.systemd1.Manager`](https://github.com/systemd/pystemd/blob/main/pystemd/systemd1/manager.py)… lets explore them a bit
 
 
 ```python
@@ -408,8 +408,8 @@ Out[34]: b'/org/freedesktop/systemd1/job/147350'
 Just make it easier to call units, by not having to specify all those pesky constants, or encode the path. Other than that, it works exactly the same as SDObject
 
 ```python
-In [35]: sdmanager = pystemd.systemd1.Manager(_autoload=True)                                                                                                                                                     
-In [36]: sdmanager.Manager                                                                                                                                    
+In [35]: sdmanager = pystemd.systemd1.Manager(_autoload=True)
+In [36]: sdmanager.Manager
 Out[36]: <b'org.freedesktop.systemd1.Manager' of /org/freedesktop/systemd1>
 
 ```
@@ -435,7 +435,7 @@ Get process from a unit
 
 ```python
 In [46]: sdmanager.Manager.GetUnitProcesses(b'session-3.scope')
-Out[46]: 
+Out[46]:
 [(b'/user.slice/user-1000.slice/session-3.scope',
   4564,
   b'"sshd: vagrant [priv]"'),
@@ -467,7 +467,7 @@ Now let's do a "fun thing" and move our process from the current unit (`session-
 Delegate=true
 ```
 
-Then lets go back to out python shell and 
+Then lets go back to out python shell and
 
 ```python
 In [52]: sdmanager.Manager.AttachProcessesToUnit("myfirstservice.service", "/", [os.getpid()])
@@ -483,7 +483,7 @@ In [54]: sdmanager.Manager.StopUnit("myfirstservice.service", "replace")
 Terminated
 [root@eth50-1 ~]
 ```
-  
+
 more on this, when we review `pystemd.futures`.
 
 
@@ -511,7 +511,7 @@ In [4]: unit.Service.MainPID
 Out[4]: 20478
 
 In [5]: unit.Service.GetProcesses()
-Out[5]: 
+Out[5]:
 [(b'/system.slice/pystemdf3db2ea8c208497b8e557148265783a2.service',
   20478,
   b'/usr/bin/sleep infinity')]
@@ -563,9 +563,9 @@ same as systemd-run, you can do some pty magic and get the output on your termin
 In [17]: import sys
 
 In [18]: pystemd.run(
-    ["/usr/bin/env"], 
-    stdout=sys.stdout, 
-    wait=True, 
+    ["/usr/bin/env"],
+    stdout=sys.stdout,
+    wait=True,
     env={"FOO": "bar"}
 )
 ```
@@ -580,12 +580,12 @@ FOO=bar
 
 ```python
 In [19]: pystemd.run(
-    ["/usr/bin/bash"], 
-    stdin=sys.stdin, 
-    stderr=sys.stderr, 
-    stdout=sys.stdout, 
-    pty=True, 
-    wait=True, 
+    ["/usr/bin/bash"],
+    stdin=sys.stdin,
+    stderr=sys.stderr,
+    stdout=sys.stdout,
+    pty=True,
+    wait=True,
     env={"FOO": "bar"}
 )
 ```
@@ -626,7 +626,7 @@ Out[25]: b'/org/freedesktop/systemd1/job/166884'
 Some extra examples you might want to try (just type them in the pystemd-shell):
 
 * **dynamic_user_socal** : Creates a unit using a dynamically generated user.
-* **directories_socal** : A bunch of directory-fu  
+* **directories_socal** : A bunch of directory-fu
 * **ip_user_socal**: Using BPF filters to limit network access.
 
 
@@ -657,7 +657,7 @@ def cpu_waste(timeout):
     t0= time.time()
     while time.time() - t0 < timeout:
         2**64 -1
-    
+
     return 2**64 -1
 ```
 
@@ -669,7 +669,7 @@ We can use pystemd.futures.run to execute it in a different systemd context, you
 In [2]: pystemd.futures.run(cpu_waste, {"CPUQuota": 0.1, "User": "nobody"}, 60)
 ```
 
-And run the stress test for 60 seconds, then you can go to to htop and get 
+And run the stress test for 60 seconds, then you can go to to htop and get
 
 ```
 22077 nobody      20   0  319M 76068  4844 R  10.9  7.7  0:00.91 /usr/bin/python3 /root/.local/bin/pystemd-shell
@@ -683,8 +683,8 @@ The process is now run as `nobody` and the cpu is ~10% … you can also do `syst
 Same as ProcessPoolExecutor, where you can shard and ratelimit work on consumers, you have `pystemd.futures.TransientUnitPoolExecutor`, that can be used as the example in [examples/future_cpucap_pool.py](https://github.com/systemd/pystemd/blob/main/examples/future_cpucap_pool.py). You can view the usage in our shell:
 
 ```python
-In [2]: ppcode future_cpucap_pool.main                                                                                                            
->>> # /opt/pystemd/examples/future_cpucap_pool.py[51:65]                                                                                                      
+In [2]: ppcode future_cpucap_pool.main
+>>> # /opt/pystemd/examples/future_cpucap_pool.py[51:65]
 
 def main(cpu_quota=0.25):
     with TransientUnitPoolExecutor(
@@ -716,7 +716,7 @@ There is also another api in python in multiprocessing that use the Process obje
 You define a process by subclassing TransientUnitProcess, and adding a run method.
 
 ```python
-In [10]: ppcode future_cpucap_process.Process                                                                                                                 
+In [10]: ppcode future_cpucap_process.Process
 -------> ppcode(future_cpucap_process.Process)
 >>> # /opt/pystemd/examples/future_cpucap_process.py[10:22]
 
@@ -737,9 +737,9 @@ class Process(TransientUnitProcess):
 Then you might as well just use it
 
 ```python
-In [11]: ppcode future_cpucap_process.main                                                                                                                    
--------> ppcode(future_cpucap_process.main)                                                                                                                   
->>> # /opt/pystemd/examples/future_cpucap_process.py[24:35]                                                                                                   
+In [11]: ppcode future_cpucap_process.main
+-------> ppcode(future_cpucap_process.main)
+>>> # /opt/pystemd/examples/future_cpucap_process.py[24:35]
 
 def main(cpu_quota=0.2):
 
@@ -752,12 +752,12 @@ def main(cpu_quota=0.2):
             cpu_percent = process.cpu_percent(interval=1)
             sys.stdout.write("\033[2J\033[1;1H")
             print(f"current {cpu_percent=}")
-  
 
 
-In [12]: future_cpucap_process.main                                                                                                                           
--------> future_cpucap_process.main()                                                                                                                         
-current cpu_percent=21.8  
+
+In [12]: future_cpucap_process.main
+-------> future_cpucap_process.main()
+current cpu_percent=21.8
 ```
 
 This respects the contract you have with Process  where you can just get `TransientUnitProcess.is_alive()` to check if the process is alive. `TransientUnitProcess.wait()` and `TransientUnitProcess.join()` is still supported
@@ -834,7 +834,7 @@ Description=pystemd: daemon-demo-service.service
 
 [Service]
 ExecStart=
-ExecStart="/usr/bin/python3" "/opt/bin/pystemd-shell"
+ExecStart="/usr/bin/python3" "/usr/local/src/workshop/bin/pystemd-shell"
 RemainAfterExit=no
 Environment="UNIT_NAME=daemon-demo-service.service" "TERM=screen-256color"
 TimeoutStartSec=5min
@@ -849,7 +849,7 @@ We still have time, so let's see the environmental variables.
 
 ```
 In [3]: env
-Out[3]: 
+Out[3]:
 {'DEBIAN_ROOT': '/opt/debian',
  'LANG': 'en_US.UTF-8',
  'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin',
@@ -934,7 +934,7 @@ In [24]: import signal
 In [26]: signal.signal(signal.SIGABRT, lambda *x: print("time to eventually die", *x) )
 Out[26]: <Handlers.SIG_DFL: 0>
 
-# lets reenable watchdog and then  
+# lets reenable watchdog and then
 In [27]: while True: pystemd.daemon.notify(False, WATCHDOG=1, WATCHDOG_USEC=1 )
 ```
 
@@ -942,7 +942,7 @@ Now we are hitting systemd pretty frequently, just hit `Ctrl-C` for us to skip a
 
 
 ```
-time to eventually die 6 <frame at 0x7ff5ceae1340, file '/usr/lib64/python3.11/selectors.py', line 468, code select>                                              
+time to eventually die 6 <frame at 0x7ff5ceae1340, file '/usr/lib64/python3.11/selectors.py', line 468, code select>
 ```
 
 We can now check the status has change to:
@@ -974,7 +974,7 @@ We are going to try to tell systemd to track another process (change the MainPID
 
 
 ```
-[~]# /opt/bin/pystemd-shell  
+[~]# /usr/local/src/workshop/bin/pystemd-shell
 ...
 
 In [1]: daemon_demo_service
@@ -992,7 +992,7 @@ Out[2]: 1
 
 ```
 
-We did a lot in one go; we created a process with `nohup` (so it's daemonized), then we 1) set the main PID of the process to that, 2) disabled the watchdog, and 3) marked the unit as ready. 
+We did a lot in one go; we created a process with `nohup` (so it's daemonized), then we 1) set the main PID of the process to that, 2) disabled the watchdog, and 3) marked the unit as ready.
 
 From now on, `pystemd-shell` is no longer the main process of the unit and can't send any more notify messages. This can be changed with the option [`NotifyAccess=exec`](https://www.freedesktop.org/software/systemd/man/systemd.service.html#NotifyAccess=), which allows `pystemd-shell` (a process started by systemd) and `sleep infinity` (the `MainPID` of the service) to send messages to the notify socket.
 

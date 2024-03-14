@@ -43,7 +43,7 @@ Description=My first systemd service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/python /opt/bin/service-whoami.py
+ExecStart=/usr/bin/python /usr/local/src/workshop/bin/service-whoami.py
 Environment=NO_SLEEP=no
 
 [Install]
