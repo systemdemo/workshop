@@ -310,31 +310,31 @@ You could just touch the file to be honest
 You should see a log line from systemd that indicates that sshd.service was reloaded. For example: `Reloaded sshd.service - OpenSSH server daemon.`
 ### Creating a ephemeral path
 
-Same as an ephemeral timer, you can create ephemeral or ad-hoc path, we have cover this before, this is just an example
+Same as an ephemeral timer, you can create ephemeral or ad-hoc path. Here is an example:
 
 ```
 [~]# systemd-run --path-property PathExists=/tmp/ping touch /tmp/pong
 Running path as unit: run-r1ad4c2faedb9498085f0090b6011ac50.path
 Will run service as unit: run-r1ad4c2faedb9498085f0090b6011ac50.service
 ```
-Will touch /tmp/pong when /tmp/ping is created, you can put any path property under [--path-property](https://www.freedesktop.org/software/systemd/man/systemd.path.html). Lets check that files dont exist
 
+When /tmp/ping exists, we will touch /tmp/pong. You can put any path property under [--path-property](https://www.freedesktop.org/software/systemd/man/systemd.path.html). Let's check that /tmp/ping and /tmp/pong don't already exist:
 
 ```
 [~] ls /tmp/pong
 ls: cannot access '/tmp/pong': No such file or directory
 [~] ls /tmp/ping
 ls: cannot access '/tmp/ping': No such file or directory
-[~] ls /tmp/pong
-ls: cannot access '/tmp/pong': No such file or directory
 ```
 
-now lets create ping, and see pong been created.
+Now lets create /tmp/ping, and see /tmp/pong been created.
 ```
 [~] touch /tmp/ping
 [~] ls /tmp/pong
 /tmp/pong
 ```
+
+One note about `PathExists=`: As long as the path passed to `PathExists=` exists, it will keep trying to active/start the service associated with it. In this case it will keep trying to touch /tmp/pong as long as /tmp/ping exists. You can check this behavior with `systemctl status <service unit name>` and see that the start limit has been hit.
 
 ---
 [back to TOC](../README.md)
