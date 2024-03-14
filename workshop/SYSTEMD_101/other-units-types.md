@@ -306,21 +306,8 @@ You could just touch the file to be honest
 ```bash
 [~] systemctl status sshd.service
 ```
-```yaml
-● sshd.service - OpenSSH server daemon
-     Loaded: loaded (/usr/lib/systemd/system/sshd.service; enabled; preset: enabled)
-     Active: active (running) since Tue 2023-02-21 21:32:29 UTC; 18min ago
-       Docs: man:sshd(8)
-             man:sshd_config(5)
-    Process: 12147 ExecReload=/bin/kill -HUP $MAINPID (code=exited, status=0/SUCCESS)
-   Main PID: 11903 (sshd)
-      Tasks: 1 (limit: 1112)
-     Memory: 1.3M
-        CPU: 24ms
-     CGroup: /system.slice/sshd.service
-             └─11903 "sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups"
-```
 
+You should see a log line from systemd that indicates that sshd.service was reloaded. For example: `Reloaded sshd.service - OpenSSH server daemon.`
 ### Creating a ephemeral path
 
 Same as an ephemeral timer, you can create ephemeral or ad-hoc path, we have cover this before, this is just an example
