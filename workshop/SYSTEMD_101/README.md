@@ -89,7 +89,7 @@ For the fields in the `[Install]` section to take effect you need to run `enable
 Now that we have started our first unit, let's modify it. There are 2 ways of doing this: modify the original service file, or add an override. Let's start by modifying the original systemd unit.
 
 
-Let’s say that you want service to run as the user "vagrant". We can add `User=vagrant` to our unit.
+Let’s say that you want service to run as the user "nobody". We can add `User=nobody` to our unit.
 
 Modify the original service file located in /etc/systemd/system/myfirstservice.service to match the following:
 
