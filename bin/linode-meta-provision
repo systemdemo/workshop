@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -ex
+
+dnf install -y git
+
+# Define the directory path
+workshop_dir="/usr/local/src/workshop"
+
+# Check if the directory exists
+if [ -d "$workshop_dir" ]; then
+    # If the directory exists, perform git pull
+    cd "$workshop_dir" || exit 1
+    git pull origin main
+else
+    # If the directory doesn't exist, perform git clone
+    git clone https://github.com/systemdemo/workshop "$workshop_dir"
+fi
+
+sh $workshop_dir/bin/provision-build
+$workshop_dir/bin/provision-host

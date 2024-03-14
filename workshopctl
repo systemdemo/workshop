@@ -13,7 +13,7 @@ from datetime import datetime
 import urllib.request
 import tarfile
 from time import sleep
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 DNF_PACKAGES = [
     "",
@@ -54,28 +54,7 @@ DNF_PACKAGES = [
     "readline-devel",
 ]
 
-PROVISION_SCRIPT = """#!/bin/bash
 
-set -ex
-
-dnf install -y git
-
-# Define the directory path
-workshop_dir="/usr/local/src/workshop"
-
-# Check if the directory exists
-if [ -d "$workshop_dir" ]; then
-    # If the directory exists, perform git pull
-    cd "$workshop_dir" || exit 1
-    git pull origin main
-else
-    # If the directory doesn't exist, perform git clone
-    git clone https://github.com/systemdemo/workshop "$workshop_dir"
-fi
-
-sh $workshop_dir/bin/provision-build
-$workshop_dir/bin/provision-host 
-"""
 
 LINODE_BUILD_LABEL = "scale-fedora39"
 
@@ -86,6 +65,7 @@ PYTHON = VENV / "bin/python3"
 SUDO = "/usr/bin/sudo"
 CONF_DIR = THIS_DIR / "conf"
 WORKSHOP = THIS_DIR / "workshop"
+LINODE_DEFAULT_PASSWORD = "systemd-SCaLE-2024"
 
 DEFAULT_CONTAINER_BASE = "registry.fedoraproject.org/fedora:39"
 DEFAULT_CONTAINER_IMAGE_NAME = "localhost/systemd-workshop"
@@ -96,6 +76,8 @@ DEFAULT_VAGRANT_STAGE_0 = "fedora/39-base.box"
 DEFAULT_VAGRANT_STAGE_N_PREFIX = "fedora/39-workshop-"
 DEFAULT_VAGRANT_LAST = "fedora/39-last.box"
 
+
+PROVISION_SCRIPT = (THIS_DIR / "bin/linode-meta-provision").read_text()
 
 def reexec(python=PYTHON, sudo=False):
     binary = SUDO if sudo else python
@@ -813,6 +795,66 @@ def list_images():
         if i.is_public:
             continue
         print(f"{i.label=}, {i.id=}")
+
+
+@linode.command()
+@click.option("--show-ssh-command/--show-instance-info", default=False)
+@click.option("--tag", default="demo-machine")
+def list_machines(show_ssh_command, tag):
+    "list all the runing images"
+    client = linode_api4.LinodeClient(
+        (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
+    )
+
+    for instance in client.linode.instances():
+        if tag not in instance.tags:
+            continue
+        if show_ssh_command:
+            print(
+                subprocess.list2cmdline(
+                    [
+                        *("sshpass", "-p", LINODE_DEFAULT_PASSWORD, "ssh"),
+                        *("-o", "StrictHostKeyChecking=no"),
+                        *("-o", "PasswordAuthentication=yes"),
+                        *("-o", "PubkeyAuthentication=no"),
+                        f"root@{instance.ipv4[0]}",
+                    ]
+                )
+            )
+        else:
+            print(instance.label, instance.ipv4[0])
+
+
+@linode.command()
+@click.option("--tag", default="demo-machine")
+@click.argument("cmd")
+def hsh(tag, cmd):
+    "list all the runing images"
+    client = linode_api4.LinodeClient(
+        (THIS_DIR / "build" / "linode" / "TOKEN").read_text().strip()
+    )
+    with ThreadPoolExecutor() as executor:
+        jobs = {
+            executor.submit(
+                subprocess.run,
+                [
+                    *("sshpass", "-p", LINODE_DEFAULT_PASSWORD, "ssh"),
+                    *("-o", "StrictHostKeyChecking=no"),
+                    *("-o", "PasswordAuthentication=yes"),
+                    *("-o", "PubkeyAuthentication=no"),
+                    f"root@{instance.ipv4[0]}",
+                    cmd
+                ],
+            ): instance.ipv4[0]
+            for instance in client.linode.instances()
+            if tag in instance.tags
+        }
+
+        for job in as_completed(jobs):
+            try:
+                print(f"{jobs[job]=} status={job.result().returncode}")
+            except Exception:
+                print(f"{jobs[job]=} failed")
 
 
 @linode.command()
