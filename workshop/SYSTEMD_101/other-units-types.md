@@ -216,7 +216,7 @@ Take a look at [`WakeSystem`](https://www.freedesktop.org/software/systemd/man/s
 
 ## Path
 
-systemd can monitor a path, and “activate” a service unit when changes to that path path  happen. This can be useful to trigger a reload (or a restart) on a configuration for the service.
+systemd can monitor a path, and “activate” a service unit when changes to that path happen. This can be useful to trigger a reload (or a restart) on a configuration for the service.
 
 
 For instance lets automatically reload sshd whenever its configuration file changes
