@@ -17,6 +17,8 @@
 # Systemd 201.
 1. [Getting Started With This Workshop](GETTING_STARTED/README.md)
 1. [systemd for Developers](SYSTEMD_FOR_DEVELOPERS/README.md)
+   1. [notify](SYSTEMD_FOR_DEVELOPERS/NOTIFY.md) 
+   1. [watchdog](SYSTEMD_FOR_DEVELOPERS/WATCHDOG.md) 
 1. [Socket Activation](03-SOCKET_ACTIVATION/README.md)
 1. [cgroups]
 2. [eBPF](eBPF/README.md)
