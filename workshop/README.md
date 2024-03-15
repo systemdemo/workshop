@@ -20,7 +20,7 @@
    1. [notify](SYSTEMD_FOR_DEVELOPERS/NOTIFY.md)
    1. [watchdog](SYSTEMD_FOR_DEVELOPERS/WATCHDOG.md)
 1. [Sandboxing](SANDBOXING/README.md)
-1. [Socket Activation](03-SOCKET_ACTIVATION/README.md)
+1. WIP [Socket Activation](03-SOCKET_ACTIVATION/README.md)
 1. [eBPF](eBPF/README.md)
    1. [Intro](eBPF/01-Intro.md)
    1. [Tools](eBPF/02-Tools.md)
