@@ -125,7 +125,7 @@ This shows you the cgroup tree for the host and all the processes running. Runni
 - user.slice contains all the processes and units related to a systemd user manager. We've only used the system manager so far (PID 1). But it is possible to have multiple systemd processes running as different users.
 - system.slice is the "default" cgroup and all system services (created by PID 1) are started here unless otherwise changed (via unit properties).
 
-> Exercise: can you come up with some real life examples of where you might use slices?
+> Question: What are some real life examples of where you might use slices?
 
 ---
 [back to TOC](../README.md)
