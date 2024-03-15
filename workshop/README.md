@@ -15,7 +15,7 @@
 
 # Systemd 201.
 1. [Getting Started With This Workshop](GETTING_STARTED/README.md)
-1. [cgroups]
+1. [cgroups](RESOURCE_CONTROL/README.md)
 1. [systemd for Developers](SYSTEMD_FOR_DEVELOPERS/README.md)
    1. [notify](SYSTEMD_FOR_DEVELOPERS/NOTIFY.md)
    1. [watchdog](SYSTEMD_FOR_DEVELOPERS/WATCHDOG.md)
@@ -25,5 +25,3 @@
    1. [Intro](eBPF/01-Intro.md)
    1. [Tools](eBPF/02-Tools.md)
    1. [Practicals](eBPF/03-Practical.md)
-
-
