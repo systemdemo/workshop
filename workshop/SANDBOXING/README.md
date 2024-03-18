@@ -216,7 +216,7 @@ You'll notice that `PrivateNetwork=` is all or nothing. The other way to isolate
 
 Let's try the previous commands, but now with 8.8.8.8 allowed, and all other addresses under this space masked:
 ```
-[~] systemd-run --pty -p IPAddressAllow=8.8.8.8 -p IPAddressDeny=8.8.0.0/8 /bin/bash
+[~] systemd-run --pty -p IPAddressAllow=8.8.8.8 -p IPAddressDeny=8.0.0.0/8 /bin/bash
 [~] ip address
 ```
 
