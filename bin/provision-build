@@ -35,7 +35,6 @@ sudo dnf install -y git\
     procps\
     passwd\
     lsof\
-    xq\
     wireshark-cli\
     util-linux-user\
     iputils\
@@ -43,13 +42,8 @@ sudo dnf install -y git\
     stress\
     bash-completion\
     python3-devel\
-    python3-Cython\
-    python3-wheel\
-    python3-ipython\
     systemtap\
     systemtap-sdt-devel\
-    python3-dnslib\
-    python3-cachetools\
     readline-devel \
     libuuid-devel \
     gcc \
@@ -60,7 +54,18 @@ sudo dnf install -y git\
     libffi-devel \
     g++
 
+  
+# not installed packages
+#      xq
+#      python3-Cython python3-wheel python3-dnslib
+#      python3-dnslib\
+#      python3-cachetools\
+#      python3-ipython\
+
 # make sure we have the latest kernel and the latest kernel modules
+
+python3 -m pip install ipython pystemd climage pygments
+
 sudo dnf upgrade -y kernel-core kernel-devel
 
 rm -f /usr/lib/systemd/system/service.d/10-timeout-abort.conf
@@ -78,18 +83,34 @@ sudo systemctl reset-failed
 test -e ${DEBIAN_ROOT}/etc/os-release || sudo debootstrap --include 'dbus,vim' stable "$DEBIAN_ROOT"
 test -e ${PYSTEMD_SRC}/setup.py || sudo git clone $PYSTEMD_REPO $PYSTEMD_SRC
 
-# create pystemd wheel and install it in root dist
 
-cd $PYSTEMD_SRC
-test -e ${PYSTEMD_SRC}/dist/*.whl || sudo python3 setup.py bdist_wheel
-sudo python3 -m pip install dist/*.whl --force-reinstall
-sudo python3 -m pip install climage
 
 mkdir -p /etc/systemd/system.conf.d
 
 if [[ -e "/home/vagrant" ]]; then
     # sets a shell for vagrant users
     cat <<EOF > /home/vagrant/.bash_profile
+# .bash_profile
+# this file was created for the workflow to move directly to root
+
+# Get the aliases and functions
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
+
+# auto cd into workshop directory
+test -e /usr/local/src/workshop/workshop && cd /usr/local/src/workshop/workshop
+
+# lets move to root
+exec sudo su -
+
+EOF
+fi
+
+
+if [[ -e "/home/ec2-user" ]]; then
+    # sets a shell for vagrant users
+    cat <<EOF > /home/ec2-user/.bash_profile
 # .bash_profile
 # this file was created for the workflow to move directly to root
 

@@ -18,6 +18,8 @@ BIN = ROOT_DIR / "bin"
 
 OPT = pathlib.Path("/opt")
 
+SYSTEMD_CONF_PATH.mkdir(parents=True, exist_ok=True)
+
 # set symlinks if they dont exists
 
 for mpath in [WORKSHOP, CONF, BIN]:
